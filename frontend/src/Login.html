@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EduConnect - Secure Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-high": "#e7e8e9",
+                    "secondary-fixed-dim": "#bbc7e2",
+                    "tertiary-container": "#541d02",
+                    "tertiary-fixed": "#ffdbcd",
+                    "inverse-surface": "#2e3132",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-on-surface": "#f0f1f2",
+                    "outline": "#747781",
+                    "on-tertiary-fixed": "#360f00",
+                    "surface-dim": "#d9dadb",
+                    "on-primary-fixed": "#001b3f",
+                    "on-secondary-container": "#58637a",
+                    "on-surface": "#191c1d",
+                    "primary-fixed": "#d7e2ff",
+                    "on-secondary": "#ffffff",
+                    "surface-container": "#edeeef",
+                    "inverse-primary": "#abc7ff",
+                    "background": "#f8f9fa",
+                    "error": "#ba1a1a",
+                    "surface-container-highest": "#e1e3e4",
+                    "primary-container": "#002d62",
+                    "on-secondary-fixed-variant": "#3c475d",
+                    "surface-container-low": "#f3f4f5",
+                    "surface-variant": "#e1e3e4",
+                    "on-primary-container": "#7796d1",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed": "#101c30",
+                    "primary-fixed-dim": "#abc7ff",
+                    "on-primary-fixed-variant": "#24467c",
+                    "surface": "#f8f9fa",
+                    "error-container": "#ffdad6",
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#c4c6d1",
+                    "surface-bright": "#f8f9fa",
+                    "on-surface-variant": "#43474f",
+                    "secondary": "#535e76",
+                    "primary": "#00193c",
+                    "tertiary-fixed-dim": "#ffb597",
+                    "on-background": "#191c1d",
+                    "on-tertiary-container": "#d4815d",
+                    "on-error-container": "#93000a",
+                    "secondary-fixed": "#d7e2fe",
+                    "tertiary": "#330e00",
+                    "on-tertiary": "#ffffff",
+                    "secondary-container": "#d4e0fc",
+                    "on-tertiary-fixed-variant": "#743417",
+                    "surface-tint": "#3e5e95"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Public Sans"],
+                    "body": ["Public Sans"],
+                    "label": ["Public Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      body {
+        font-family: 'Public Sans', sans-serif;
+        background-color: #f8f9fa;
+      }
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .academic-gradient {
+        background: linear-gradient(135deg, #00193c 0%, #002d62 100%);
+      }
+      .ghost-border:focus-within {
+        box-shadow: 0 0 0 1px #c4c6d1;
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex flex-col min-h-screen text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Suppression of Nav Shell for Transactional Focus -->
+<main class="flex-grow flex flex-col items-center justify-center px-6 py-12 relative overflow-hidden">
+<!-- Background Decorative Element (Asymmetric Intent) -->
+<div class="absolute -top-24 -right-24 w-96 h-96 academic-gradient opacity-[0.03] rounded-full blur-3xl"></div>
+<div class="absolute -bottom-24 -left-24 w-80 h-80 bg-surface-tint opacity-[0.05] rounded-full blur-3xl"></div>
+<!-- Login Container -->
+<div class="w-full max-w-[400px] z-10">
+<!-- Logo & Branding -->
+<div class="flex flex-col items-center mb-12">
+<div class="w-16 h-16 bg-primary flex items-center justify-center rounded-xl mb-6 shadow-xl shadow-primary/10">
+<span class="material-symbols-outlined text-on-primary text-4xl" data-icon="school">school</span>
+</div>
+<h1 class="text-3xl font-bold tracking-tight text-primary font-headline">EduConnect</h1>
+<p class="text-secondary text-sm mt-2 font-label uppercase tracking-widest opacity-80">Academic Atelier</p>
+</div>
+<!-- Auth Card -->
+<div class="bg-surface-container-lowest rounded-xl p-8 space-y-8">
+<header class="space-y-1">
+<h2 class="text-xl font-bold text-on-surface">Welcome Back</h2>
+<p class="text-on-surface-variant text-sm">Please enter your credentials to access your portal.</p>
+</header>
+<form class="space-y-6">
+<!-- Email Field -->
+<div class="space-y-2">
+<label class="block text-[0.6875rem] font-bold uppercase tracking-wider text-on-surface-variant ml-1" for="email">
+              Email Address
+            </label>
+<div class="relative group ghost-border rounded-lg bg-surface-variant/50 transition-all duration-200">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[1.25rem]">mail</span>
+<input class="w-full pl-12 pr-4 py-4 bg-transparent border-none focus:ring-0 text-on-surface placeholder:text-outline/60 text-sm" id="email" name="email" placeholder="university@educonnect.ac" type="email"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="space-y-2">
+<label class="block text-[0.6875rem] font-bold uppercase tracking-wider text-on-surface-variant ml-1" for="password">
+              Password
+            </label>
+<div class="relative group ghost-border rounded-lg bg-surface-variant/50 transition-all duration-200">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[1.25rem]">lock</span>
+<input class="w-full pl-12 pr-4 py-4 bg-transparent border-none focus:ring-0 text-on-surface placeholder:text-outline/60 text-sm" id="password" name="password" placeholder="••••••••••••" type="password"/>
+</div>
+</div>
+<!-- Submit Action -->
+<div class="pt-2">
+<button class="w-full bg-primary text-on-primary py-4 px-6 rounded-lg font-bold text-sm tracking-wide shadow-lg shadow-primary/20 hover:bg-primary-container hover:text-on-primary-container transition-all active:scale-95 flex items-center justify-center gap-2 border-t border-white/10" type="submit">
+              Login
+              <span class="material-symbols-outlined text-[1.25rem]">arrow_forward</span>
+</button>
+</div>
+</form>
+<!-- Auxiliary Actions -->
+<div class="text-center">
+<a class="text-xs font-bold text-primary hover:underline decoration-surface-tint underline-offset-4 transition-all" href="#">
+            Forgot Password?
+          </a>
+</div>
+</div>
+<!-- Hero Visual Representation -->
+<div class="mt-12 rounded-xl overflow-hidden relative h-32 opacity-80 mix-blend-multiply">
+<img alt="Library shelves" class="w-full h-full object-cover grayscale" data-alt="Interior of a classic university library with dark wood bookshelves and rows of academic books under soft warm interior lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAeze7CZGnzU2Io7hsYw8wZuzUhmO03Qz7ciZLaBZC7vllYpKG7sAQDqWOlzRsbo9PTsMUA71ULVIkIufl3IBCAlFCKfO-d0J1pbsaC85en7dHnNIF_DV75yafd6W7IqHYE4d-Bko_pQ40EUhtc8qk0d0tm1vTSq6FNDQDTKDQ9PSy2vqL8ukzUkfw7CisguFZ719l6pHxOGxbylnv93su7wYcFlZJPhdOhI1OEMzUNzAsF3YpaUCn_aifCpP0JERG5wuc4PD1GgtY"/>
+<div class="absolute inset-0 bg-primary/40"></div>
+</div>
+</div>
+</main>
+<!-- Shared Footer (Derived from JSON) -->
+<footer class="w-full py-8 mt-auto flex flex-col items-center gap-4 text-center px-4 bg-[#f3f4f5] dark:bg-[#191c1d]">
+<div class="mb-4">
+<p class="text-on-surface-variant text-sm mb-2">Don't have an account?</p>
+<a class="text-primary font-bold text-sm hover:underline decoration-1 transition-all" href="#">
+        Sign Up
+      </a>
+</div>
+<div class="flex flex-wrap justify-center gap-6 mb-4">
+<a class="text-[0.6875rem] font-public-sans tracking-wider uppercase text-[#535e76] dark:text-[#c4c6d1] hover:underline decoration-1 transition-opacity opacity-80 hover:opacity-100" href="#">Privacy Policy</a>
+<a class="text-[0.6875rem] font-public-sans tracking-wider uppercase text-[#535e76] dark:text-[#c4c6d1] hover:underline decoration-1 transition-opacity opacity-80 hover:opacity-100" href="#">Terms of Service</a>
+<a class="text-[0.6875rem] font-public-sans tracking-wider uppercase text-[#535e76] dark:text-[#c4c6d1] hover:underline decoration-1 transition-opacity opacity-80 hover:opacity-100" href="#">Help Center</a>
+</div>
+<p class="text-[0.6875rem] font-public-sans tracking-wider uppercase text-[#535e76] dark:text-[#c4c6d1] opacity-60">
+      © 2024 EduConnect Academy. All rights reserved.
+    </p>
+</footer>
+</body></html>

@@ -1,0 +1,29 @@
+export interface NavItem {
+  icon: string;
+  label: string;
+  to: string;
+}
+
+export const teacherNav: NavItem[] = [
+  { icon: 'dashboard', label: 'Dashboard', to: '/teacher/dashboard' },
+  { icon: 'school', label: 'Courses', to: '/teacher/courses' },
+  { icon: 'event', label: 'Sessions', to: '/teacher/sessions' },
+  { icon: 'description', label: 'Documents', to: '/teacher/documents' },
+  { icon: 'quiz', label: 'Quizzes', to: '/teacher/quizzes' },
+  { icon: 'group', label: 'Students', to: '/teacher/students' },
+  { icon: 'notifications', label: 'Notifications', to: '/teacher/notifications' },
+  { icon: 'settings', label: 'Settings', to: '/teacher/settings' },
+];
+
+export const studentNav: NavItem[] = [
+  { icon: 'dashboard', label: 'Dashboard', to: '/student/dashboard' },
+  { icon: 'school', label: 'My Courses', to: '/student/courses' },
+  { icon: 'event', label: 'Sessions', to: '/student/sessions' },
+  { icon: 'description', label: 'Documents', to: '/student/documents' },
+  { icon: 'quiz', label: 'Quizzes', to: '/student/quizzes' },
+  { icon: 'notifications', label: 'Notifications', to: '/student/notifications' },
+  { icon: 'settings', label: 'Settings', to: '/student/settings' },
+];
+
+export const navForRole = (role: 'teacher' | 'student' | null) =>
+  role === 'teacher' ? teacherNav : studentNav;

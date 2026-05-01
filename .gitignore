@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build output
+dist/
+dist-ssr/
+**/dist/
+
+# Env files (secrets — never commit)
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+
+# Files with hardcoded credentials — do not commit until refactored to use env vars
+frontend/push_schema.mjs
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local-only
+*.local
+.claude/
+memory/
+
+# Supabase CLI
+.supabase/
+supabase/.temp/
+.agents/
