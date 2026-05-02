@@ -44,3 +44,4 @@ memory/
 .supabase/
 supabase/.temp/
 .agents/
+.vercel
