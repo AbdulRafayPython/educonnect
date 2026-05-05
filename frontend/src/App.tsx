@@ -10,6 +10,8 @@ import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import Sessions from './pages/Sessions';
 import Documents from './pages/Documents';
+import Slides from './pages/Slides';
+import SlideViewer from './pages/SlideViewer';
 import Quizzes from './pages/Quizzes';
 import Notifications from './pages/Notifications';
 import Students from './pages/Students';
@@ -99,6 +101,8 @@ function App() {
         <Route path="/teacher/courses/:id" element={teacherGuard(<CourseDetail />)} />
         <Route path="/teacher/sessions" element={teacherGuard(<Sessions />)} />
         <Route path="/teacher/documents" element={teacherGuard(<Documents />)} />
+        <Route path="/teacher/slides" element={teacherGuard(<Slides />)} />
+        <Route path="/teacher/slides/:id" element={teacherGuard(<SlideViewer />)} />
         <Route path="/teacher/quizzes" element={teacherGuard(<Quizzes />)} />
         <Route path="/teacher/students" element={teacherGuard(<Students />)} />
         <Route path="/teacher/notifications" element={teacherGuard(<Notifications />)} />
@@ -110,6 +114,8 @@ function App() {
         <Route path="/student/courses/:id" element={studentGuard(<CourseDetail />)} />
         <Route path="/student/sessions" element={studentGuard(<Sessions />)} />
         <Route path="/student/documents" element={studentGuard(<Documents />)} />
+        <Route path="/student/slides" element={studentGuard(<Slides />)} />
+        <Route path="/student/slides/:id" element={studentGuard(<SlideViewer />)} />
         <Route path="/student/quizzes" element={studentGuard(<Quizzes />)} />
         <Route path="/student/notifications" element={studentGuard(<Notifications />)} />
         <Route path="/student/settings" element={studentGuard(<Settings />)} />

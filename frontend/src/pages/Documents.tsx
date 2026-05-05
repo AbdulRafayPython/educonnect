@@ -91,13 +91,16 @@ export default function Documents() {
   };
 
   const handleDownload = async (filePath: string, title: string) => {
-    const { data } = await supabase.storage.from('documents').createSignedUrl(filePath, 60);
-    if (data?.signedUrl) {
-      const a = document.createElement('a');
-      a.href = data.signedUrl;
-      a.download = title;
-      a.click();
-    }
+    const { data, error } = await supabase.storage.from('documents').download(filePath);
+    if (error || !data) { toast.error('Download failed', error?.message || 'Could not fetch file.'); return; }
+    const url = URL.createObjectURL(data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filePath.split('/').pop() || title;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   };
 
   const handleDelete = (id: string, filePath: string) => {

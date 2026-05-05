@@ -82,13 +82,16 @@ export default function CourseDetail() {
   };
 
   const downloadDoc = async (filePath: string, title: string) => {
-    const { data } = await supabase.storage.from('documents').createSignedUrl(filePath, 60);
-    if (data?.signedUrl) {
-      const a = document.createElement('a');
-      a.href = data.signedUrl;
-      a.download = title;
-      a.click();
-    }
+    const { data } = await supabase.storage.from('documents').download(filePath);
+    if (!data) return;
+    const url = URL.createObjectURL(data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filePath.split('/').pop() || title;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   };
 
   if (loading) {

@@ -45,3 +45,10 @@ memory/
 supabase/.temp/
 .agents/
 .vercel
+
+# Local scratch / screenshots (root-level only — not inside src/)
+/Slide/
+/image.png
+/*.png
+/*.jpg
+/*.jpeg

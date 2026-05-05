@@ -256,8 +256,16 @@ export default function Quizzes() {
                   <div className="flex flex-col gap-2 shrink-0 items-end">
                     {q.file_path && (
                       <button onClick={async () => {
-                        const { data } = await supabase.storage.from('documents').createSignedUrl(q.file_path, 60);
-                        if (data?.signedUrl) window.open(data.signedUrl);
+                        const { data, error } = await supabase.storage.from('documents').download(q.file_path);
+                        if (error || !data) { toast.error('Download failed', error?.message || 'Could not fetch file.'); return; }
+                        const url = URL.createObjectURL(data);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = q.file_path.split('/').pop() || `${q.title}`;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        URL.revokeObjectURL(url);
                       }} className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-primary bg-primary/10 rounded-xl hover:bg-primary/20 transition-colors">
                         <span className="material-symbols-outlined" style={{ fontSize: '0.9rem' }}>download</span>Download
                       </button>

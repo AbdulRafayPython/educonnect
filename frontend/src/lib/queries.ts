@@ -7,6 +7,7 @@ export const qk = {
   courses: ['courses'] as const,
   coursesActive: ['courses', 'active'] as const,
   notifications: ['notifications'] as const,
+  slides: ['slides'] as const,
 };
 
 export async function fetchDocuments() {
@@ -38,6 +39,15 @@ export async function fetchQuizzes() {
 
 export async function fetchCourses() {
   const { data, error } = await supabase.from('courses').select('id, title');
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchSlides() {
+  const { data, error } = await supabase
+    .from('slides')
+    .select('*')
+    .order('created_at', { ascending: false });
   if (error) throw error;
   return data ?? [];
 }

@@ -9,7 +9,8 @@ type NotifType =
   | 'quiz'
   | 'grade'
   | 'announcement'
-  | 'submission';
+  | 'submission'
+  | 'slide';
 
 async function recipients(target: 'students' | 'teachers'): Promise<string[]> {
   const role = target === 'students' ? 'student' : 'teacher';
