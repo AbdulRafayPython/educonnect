@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import DashboardLayout from '../components/DashboardLayout';
+import { DashboardContentSkeleton } from '../components/Skeleton';
 import { useAppStore } from '../store/useAppStore';
 import { supabase } from '../lib/supabase';
 import { studentNav } from '../lib/nav';
@@ -49,22 +51,19 @@ export default function StudentDashboard() {
   const { profile } = useAppStore();
   const firstName = profile?.full_name?.split(' ')[0] || 'Student';
 
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-
-  useEffect(() => {
-    (async () => {
-      const [c, s, q] = await Promise.all([
-        supabase.from('courses').select('*').eq('is_archived', false),
-        supabase.from('sessions').select('*').order('scheduled_at', { ascending: true }),
-        supabase.from('quizzes').select('id, status'),
-      ]);
-      if (c.data) setCourses(c.data);
-      if (s.data) setSessions(s.data);
-      if (q.data) setQuizzes(q.data);
-    })();
-  }, []);
+  const { data: courses = [], isPending: cPending } = useQuery<Course[]>({
+    queryKey: ['dashboard', 'student', 'courses'],
+    queryFn: async () => (await supabase.from('courses').select('*').eq('is_archived', false)).data ?? [],
+  });
+  const { data: sessions = [], isPending: sPending } = useQuery<Session[]>({
+    queryKey: ['dashboard', 'student', 'sessions'],
+    queryFn: async () => (await supabase.from('sessions').select('*').order('scheduled_at', { ascending: true })).data ?? [],
+  });
+  const { data: quizzes = [], isPending: qPending } = useQuery<Quiz[]>({
+    queryKey: ['dashboard', 'student', 'quizzes'],
+    queryFn: async () => (await supabase.from('quizzes').select('id, status')).data ?? [],
+  });
+  const dashboardLoading = cPending || sPending || qPending;
 
   const courseTitleMap = useMemo(() => Object.fromEntries(courses.map(c => [c.id, c.title])), [courses]);
   const now = new Date();
@@ -81,6 +80,14 @@ export default function StudentDashboard() {
     if (h < 18) return 'Good afternoon';
     return 'Good evening';
   })();
+
+  if (dashboardLoading) {
+    return (
+      <DashboardLayout title="Student Dashboard" navItems={studentNav}>
+        <DashboardContentSkeleton />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Student Dashboard" navItems={studentNav}>

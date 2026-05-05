@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { supabase } from './lib/supabase';
 import { useAppStore } from './store/useAppStore';
 
+import AppShellSkeleton from './components/AppShellSkeleton';
 import Login from './pages/Login';
 import TeacherDashboard from './pages/TeacherDashboard';
 import StudentDashboard from './pages/StudentDashboard';
@@ -24,8 +25,16 @@ function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
+        // If we already have a cached profile, mark loading complete immediately
+        // so the dashboard renders. Re-fetch in the background to revalidate.
+        if (useAppStore.getState().profile) {
+          setIsLoading(false);
+          fetchProfile(session.user.id);
+        } else {
+          fetchProfile(session.user.id);
+        }
       } else {
+        setProfile(null);
         setIsLoading(false);
       }
     });
@@ -33,7 +42,12 @@ function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
+        if (useAppStore.getState().profile) {
+          setIsLoading(false);
+          fetchProfile(session.user.id);
+        } else {
+          fetchProfile(session.user.id);
+        }
       } else {
         setProfile(null);
         setIsLoading(false);
@@ -77,23 +91,41 @@ function App() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
-        <div className="w-12 h-12 academic-gradient rounded-2xl flex items-center justify-center shadow-xl">
-          <span className="material-symbols-outlined text-white animate-pulse" style={{ fontSize: '1.5rem' }}>school</span>
+    // If we know there's no user yet, show a small splash so the login page
+    // doesn't flash a chrome-skeleton. If we already have a user (returning
+    // session), show the full app-shell skeleton — feels instant.
+    if (!user) {
+      return (
+        <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background gap-4">
+          <div className="w-12 h-12 academic-gradient rounded-2xl flex items-center justify-center shadow-xl">
+            <span className="material-symbols-outlined text-white animate-pulse" style={{ fontSize: '1.5rem' }}>school</span>
+          </div>
+          <p className="text-sm font-bold text-primary/60 uppercase tracking-widest">Loading…</p>
         </div>
-        <p className="text-sm font-bold text-primary/60 uppercase tracking-widest">Loading…</p>
-      </div>
-    );
+      );
+    }
+    return <AppShellSkeleton />;
   }
 
-  const teacherGuard = (el: React.ReactNode) => user && role === 'teacher' ? el : <Navigate to="/login" replace />;
-  const studentGuard = (el: React.ReactNode) => user && role === 'student' ? el : <Navigate to="/login" replace />;
+  // While the user is authenticated but the profile/role is still resolving,
+  // show the app-shell skeleton instead of bouncing through guards. This
+  // prevents a brief blank page right after sign-in (user set, role null) where
+  // /login → dashboard → /login redirects produce no visible UI.
+  const teacherGuard = (el: React.ReactNode) => {
+    if (!user) return <Navigate to="/login" replace />;
+    if (!role) return <AppShellSkeleton />;
+    return role === 'teacher' ? el : <Navigate to="/student/dashboard" replace />;
+  };
+  const studentGuard = (el: React.ReactNode) => {
+    if (!user) return <Navigate to="/login" replace />;
+    if (!role) return <AppShellSkeleton />;
+    return role === 'student' ? el : <Navigate to="/teacher/dashboard" replace />;
+  };
 
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={!user ? <Login /> : <Navigate to={role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard'} replace />} />
+        <Route path="/login" element={!user ? <Login /> : (role ? <Navigate to={role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard'} replace /> : <AppShellSkeleton />)} />
 
         {/* Teacher Routes */}
         <Route path="/teacher/dashboard" element={teacherGuard(<TeacherDashboard />)} />

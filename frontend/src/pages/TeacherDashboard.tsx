@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import DashboardLayout from '../components/DashboardLayout';
+import { DashboardContentSkeleton } from '../components/Skeleton';
 import { useAppStore } from '../store/useAppStore';
 import { supabase } from '../lib/supabase';
 import { teacherNav } from '../lib/nav';
@@ -40,25 +42,23 @@ export default function TeacherDashboard() {
   const { profile } = useAppStore();
   const firstName = profile?.full_name?.split(' ')[0] || 'Professor';
 
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [recentNotifs, setRecentNotifs] = useState<Notif[]>([]);
-
-  useEffect(() => {
-    (async () => {
-      const [c, s, q, n] = await Promise.all([
-        supabase.from('courses').select('*').eq('is_archived', false),
-        supabase.from('sessions').select('*').order('scheduled_at', { ascending: true }),
-        supabase.from('quizzes').select('id, title, status'),
-        supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(5),
-      ]);
-      if (c.data) setCourses(c.data);
-      if (s.data) setSessions(s.data);
-      if (q.data) setQuizzes(q.data);
-      if (n.data) setRecentNotifs(n.data);
-    })();
-  }, []);
+  const { data: courses = [], isPending: cPending } = useQuery<Course[]>({
+    queryKey: ['dashboard', 'teacher', 'courses'],
+    queryFn: async () => (await supabase.from('courses').select('*').eq('is_archived', false)).data ?? [],
+  });
+  const { data: sessions = [], isPending: sPending } = useQuery<Session[]>({
+    queryKey: ['dashboard', 'teacher', 'sessions'],
+    queryFn: async () => (await supabase.from('sessions').select('*').order('scheduled_at', { ascending: true })).data ?? [],
+  });
+  const { data: quizzes = [], isPending: qPending } = useQuery<Quiz[]>({
+    queryKey: ['dashboard', 'teacher', 'quizzes'],
+    queryFn: async () => (await supabase.from('quizzes').select('id, title, status')).data ?? [],
+  });
+  const { data: recentNotifs = [], isPending: nPending } = useQuery<Notif[]>({
+    queryKey: ['dashboard', 'teacher', 'recent-notifs'],
+    queryFn: async () => (await supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(5)).data ?? [],
+  });
+  const dashboardLoading = cPending || sPending || qPending || nPending;
 
   const now = new Date();
   const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - now.getDay()); startOfWeek.setHours(0, 0, 0, 0);
@@ -85,6 +85,14 @@ export default function TeacherDashboard() {
 
   const courseTitleMap = useMemo(() => Object.fromEntries(courses.map(c => [c.id, c.title])), [courses]);
   const countdown = useCountdown(nextSession?.scheduled_at ?? null);
+
+  if (dashboardLoading) {
+    return (
+      <DashboardLayout title="Teacher Dashboard" navItems={teacherNav}>
+        <DashboardContentSkeleton />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Teacher Dashboard" navItems={teacherNav}>

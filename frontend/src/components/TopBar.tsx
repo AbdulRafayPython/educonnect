@@ -6,6 +6,7 @@ import { useAppStore } from '../store/useAppStore';
 
 interface TopBarProps {
   title: string;
+  onMenuClick?: () => void;
 }
 
 interface Notif {
@@ -29,7 +30,7 @@ const typeIcons: Record<string, string> = {
   submission: 'assignment_turned_in',
 };
 
-export default function TopBar({ title }: TopBarProps) {
+export default function TopBar({ title, onMenuClick }: TopBarProps) {
   const navigate = useNavigate();
   const { profile, user, role, setUser, setProfile } = useAppStore();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -106,10 +107,20 @@ export default function TopBar({ title }: TopBarProps) {
   const unreadCount = notifs.filter((n) => !n.is_read).length;
 
   return (
-    <header className="sticky top-0 z-40 h-16 flex items-center justify-between px-6 bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant/20">
-      <h1 className="text-base font-bold text-on-surface tracking-tight">{title}</h1>
+    <header className="sticky top-0 z-30 h-16 flex items-center justify-between gap-2 px-3 sm:px-6 bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant/20 pt-[env(safe-area-inset-top)]">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <button
+          type="button"
+          onClick={onMenuClick}
+          aria-label="Open menu"
+          className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-container active:bg-surface-container/80 transition-colors text-on-surface-variant -ml-1"
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: '1.4rem' }}>menu</span>
+        </button>
+        <h1 className="text-base font-bold text-on-surface tracking-tight truncate">{title}</h1>
+      </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setNotifOpen((v) => !v)}
@@ -124,7 +135,7 @@ export default function TopBar({ title }: TopBarProps) {
           </button>
 
           {notifOpen && (
-            <div className="absolute right-0 mt-2 w-80 bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant/20 overflow-hidden z-50">
+            <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 sm:mt-2 sm:w-80 top-[calc(env(safe-area-inset-top)+4rem)] sm:top-auto bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant/20 overflow-hidden z-50">
               <div className="px-5 py-4 border-b border-outline-variant/20 flex items-center justify-between">
                 <span className="font-bold text-sm text-on-surface">Notifications</span>
                 {unreadCount > 0 && (

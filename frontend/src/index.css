@@ -59,13 +59,23 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
   }
   body {
     font-family: 'Public Sans', sans-serif;
     background-color: var(--color-background);
+    overscroll-behavior-y: none;
   }
   button, a {
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  /* Prevent iOS Safari zoom on input focus (font-size < 16px triggers zoom) */
+  @supports (-webkit-touch-callout: none) {
+    input, select, textarea {
+      font-size: 16px;
+    }
   }
   /* Smoother default transitions everywhere */
   button, a, [role="button"] {

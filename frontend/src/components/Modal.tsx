@@ -20,7 +20,7 @@ export default function Modal({ open, onClose, title, children, maxWidth = 'md' 
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm sm:px-4 overflow-y-auto"
           onClick={onClose}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -28,7 +28,7 @@ export default function Modal({ open, onClose, title, children, maxWidth = 'md' 
           transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
         >
           <motion.div
-            className={`bg-surface-container-lowest rounded-2xl p-7 w-full ${widthClass[maxWidth]} shadow-2xl space-y-5`}
+            className={`bg-surface-container-lowest rounded-t-3xl sm:rounded-2xl p-5 sm:p-7 w-full ${widthClass[maxWidth]} shadow-2xl space-y-5 max-h-[92dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+1.25rem)] sm:pb-7`}
             onClick={(e) => e.stopPropagation()}
             initial={{ opacity: 0, scale: 0.94, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}

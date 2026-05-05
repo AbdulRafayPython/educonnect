@@ -75,22 +75,22 @@ export default function SlideViewer() {
 
   return (
     <DashboardLayout title="Slide Viewer" navItems={nav}>
-      <div className="max-w-7xl mx-auto space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+      <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
+        <div className="flex flex-row justify-between items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <button
               onClick={() => navigate(backTo)}
-              className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-surface-container transition-colors text-on-surface-variant"
+              className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-surface-container active:bg-surface-container/80 transition-colors text-on-surface-variant shrink-0"
               aria-label="Back to slides"
             >
               <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>arrow_back</span>
             </button>
             <div className="min-w-0">
-              <h2 className="text-xl font-extrabold text-primary tracking-tight truncate">
+              <h2 className="text-base sm:text-xl font-extrabold text-primary tracking-tight truncate">
                 {slide?.title || (status === 'loading' ? 'Loading…' : 'Slide deck')}
               </h2>
               {course && (
-                <p className="text-[0.65rem] font-bold uppercase tracking-widest text-secondary/60 mt-0.5">{course.title}</p>
+                <p className="text-[0.6rem] sm:text-[0.65rem] font-bold uppercase tracking-widest text-secondary/60 mt-0.5 truncate">{course.title}</p>
               )}
             </div>
           </div>
@@ -98,16 +98,17 @@ export default function SlideViewer() {
             <button
               type="button"
               onClick={openInNewTab}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-container text-on-surface text-xs font-bold hover:bg-surface-container-high transition-colors"
+              aria-label="Open in new tab"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-surface-container text-on-surface text-xs font-bold hover:bg-surface-container-high active:bg-surface-container-high transition-colors shrink-0"
             >
               <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>open_in_new</span>
-              Open in new tab
+              <span className="hidden sm:inline">Open in new tab</span>
             </button>
           )}
         </div>
 
         {status === 'loading' && (
-          <div className="w-full h-[calc(100vh-12rem)] rounded-2xl border border-outline-variant/20 flex items-center justify-center bg-surface-container/40">
+          <div className="w-full h-[calc(100dvh-10rem)] sm:h-[calc(100dvh-12rem)] rounded-2xl border border-outline-variant/20 flex items-center justify-center bg-surface-container/40">
             <p className="text-sm text-on-surface-variant font-medium">Loading slide deck…</p>
           </div>
         )}
@@ -131,7 +132,7 @@ export default function SlideViewer() {
           <iframe
             src={blobUrl}
             sandbox="allow-scripts allow-same-origin"
-            className="w-full h-[calc(100vh-12rem)] rounded-2xl border border-outline-variant/20 bg-white"
+            className="w-full h-[calc(100dvh-10rem)] sm:h-[calc(100dvh-12rem)] rounded-2xl border border-outline-variant/20 bg-white"
             title={slide?.title || 'Slide deck'}
           />
         )}
