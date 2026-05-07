@@ -17,6 +17,12 @@ import Quizzes from './pages/Quizzes';
 import Notifications from './pages/Notifications';
 import Students from './pages/Students';
 import Settings from './pages/Settings';
+import Feed from './pages/Feed';
+import FeedDetail from './pages/FeedDetail';
+import FeedSaved from './pages/FeedSaved';
+import TeacherFeed from './pages/TeacherFeed';
+import TeacherFeedSources from './pages/TeacherFeedSources';
+import TeacherFeedConceptEditor from './pages/TeacherFeedConceptEditor';
 
 function App() {
   const { user, role, setUser, setProfile, isLoading, setIsLoading } = useAppStore();
@@ -136,6 +142,11 @@ function App() {
         <Route path="/teacher/slides" element={teacherGuard(<Slides />)} />
         <Route path="/teacher/slides/:id" element={teacherGuard(<SlideViewer />)} />
         <Route path="/teacher/quizzes" element={teacherGuard(<Quizzes />)} />
+        <Route path="/teacher/feed" element={teacherGuard(<TeacherFeed />)} />
+        <Route path="/teacher/feed/sources" element={teacherGuard(<TeacherFeedSources />)} />
+        <Route path="/teacher/feed/new" element={teacherGuard(<TeacherFeedConceptEditor />)} />
+        <Route path="/teacher/feed/edit/:id" element={teacherGuard(<TeacherFeedConceptEditor />)} />
+        <Route path="/teacher/feed/view/:id" element={teacherGuard(<FeedDetail />)} />
         <Route path="/teacher/students" element={teacherGuard(<Students />)} />
         <Route path="/teacher/notifications" element={teacherGuard(<Notifications />)} />
         <Route path="/teacher/settings" element={teacherGuard(<Settings />)} />
@@ -149,6 +160,9 @@ function App() {
         <Route path="/student/slides" element={studentGuard(<Slides />)} />
         <Route path="/student/slides/:id" element={studentGuard(<SlideViewer />)} />
         <Route path="/student/quizzes" element={studentGuard(<Quizzes />)} />
+        <Route path="/student/feed" element={studentGuard(<Feed />)} />
+        <Route path="/student/feed/saved" element={studentGuard(<FeedSaved />)} />
+        <Route path="/student/feed/:id" element={studentGuard(<FeedDetail />)} />
         <Route path="/student/notifications" element={studentGuard(<Notifications />)} />
         <Route path="/student/settings" element={studentGuard(<Settings />)} />
 
