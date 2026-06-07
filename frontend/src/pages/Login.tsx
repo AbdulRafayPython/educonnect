@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAppStore } from '../store/useAppStore';
+import { roleHome } from '../lib/nav';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -55,10 +56,10 @@ export default function Login() {
 
         if (!profileError && profile) {
           setProfile(profile);
-          navigate(profile.role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard');
+          navigate(roleHome(profile.role));
         }
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);

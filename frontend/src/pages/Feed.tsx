@@ -4,7 +4,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { SkeletonCard } from '../components/Skeleton';
 import { FeedCard } from '../components/FeedCard';
 import { useAppStore } from '../store/useAppStore';
-import { navForRole } from '../lib/nav';
+import { navForRole, feedBasePath, feedSavedPath } from '../lib/nav';
 import {
   qk,
   fetchFeedItems,
@@ -23,7 +23,7 @@ export default function Feed() {
   const user = useAppStore((s) => s.user);
   const qc = useQueryClient();
 
-  const basePath = role === 'teacher' ? '/teacher/feed/view' : '/student/feed';
+  const basePath = feedBasePath(role);
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [diffFilter, setDiffFilter] = useState<DifficultyFilter>('all');
   const [activeSources, setActiveSources] = useState<string[]>([]);
@@ -84,9 +84,9 @@ export default function Feed() {
               Curated news in plain language, plus the foundations you need to understand it.
             </p>
           </div>
-          {role === 'student' && (
+          {(role === 'student' || role === 'student_group') && (
             <a
-              href="/student/feed/saved"
+              href={feedSavedPath(role)}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 text-sm font-bold text-on-surface hover:border-primary/40 transition-all"
             >
               <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>bookmark</span>

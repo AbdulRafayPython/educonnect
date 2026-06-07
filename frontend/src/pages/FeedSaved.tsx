@@ -5,7 +5,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { SkeletonCard } from '../components/Skeleton';
 import { FeedCard } from '../components/FeedCard';
 import { useAppStore } from '../store/useAppStore';
-import { navForRole } from '../lib/nav';
+import { navForRole, feedBasePath } from '../lib/nav';
 import {
   qk,
   fetchSavedFeedItems,
@@ -20,7 +20,7 @@ export default function FeedSaved() {
   const role = useAppStore((s) => s.role);
   const user = useAppStore((s) => s.user);
   const qc = useQueryClient();
-  const basePath = role === 'teacher' ? '/teacher/feed/view' : '/student/feed';
+  const basePath = feedBasePath(role);
 
   const savedQuery = useQuery({
     queryKey: qk.feedSaved(user?.id ?? 'anon'),

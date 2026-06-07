@@ -4,7 +4,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import DashboardLayout from '../components/DashboardLayout';
 import { useAppStore } from '../store/useAppStore';
-import { navForRole } from '../lib/nav';
+import { navForRole, feedBasePath } from '../lib/nav';
 import {
   qk,
   fetchFeedItem,
@@ -31,7 +31,7 @@ export default function FeedDetail() {
   const role = useAppStore((s) => s.role);
   const user = useAppStore((s) => s.user);
   const qc = useQueryClient();
-  const basePath = role === 'teacher' ? '/teacher/feed/view' : '/student/feed';
+  const basePath = feedBasePath(role);
 
   const itemQuery = useQuery({
     queryKey: qk.feedItem(id ?? ''),

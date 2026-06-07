@@ -6,7 +6,9 @@ const PROFILE_CACHE_KEY = 'educonnect:profile-cache';
 interface AppState {
   user: User | null;
   profile: any | null; // Replace any with generated Database type later
-  role: 'teacher' | 'student' | null;
+  // 'student' == Mode A private DTU student (PRD's student_private);
+  // 'student_group' == Mode B masterclass cousin (Google OAuth).
+  role: 'teacher' | 'student' | 'student_group' | null;
   isLoading: boolean;
   setUser: (user: User | null) => void;
   setProfile: (profile: any | null) => void;
