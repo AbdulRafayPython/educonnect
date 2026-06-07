@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAppStore } from '../store/useAppStore';
+import TeacherModeSwitcher from './TeacherModeSwitcher';
 
 interface NavItem {
   icon: string;
@@ -16,7 +17,7 @@ interface SidebarProps {
 
 export default function Sidebar({ navItems, open = false, onClose }: SidebarProps) {
   const navigate = useNavigate();
-  const { setUser, setProfile } = useAppStore();
+  const { setUser, setProfile, role } = useAppStore();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -59,12 +60,14 @@ export default function Sidebar({ navItems, open = false, onClose }: SidebarProp
           </button>
         </div>
 
+        {role === 'teacher' && <TeacherModeSwitcher onNavigate={onClose} />}
+
         <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto overscroll-contain">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
-              end={item.to.endsWith('/dashboard')}
+              end={item.to.endsWith('/dashboard') || item.to === '/teacher/masterclass'}
               onClick={onClose}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-3 lg:py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${

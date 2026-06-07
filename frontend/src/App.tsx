@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { useAppStore } from './store/useAppStore';
+import { roleHome } from './lib/nav';
 
 import AppShellSkeleton from './components/AppShellSkeleton';
 import Login from './pages/Login';
@@ -17,6 +18,22 @@ import Quizzes from './pages/Quizzes';
 import Notifications from './pages/Notifications';
 import Students from './pages/Students';
 import Settings from './pages/Settings';
+import Masterclass from './pages/Masterclass';
+import Join from './pages/Join';
+import AuthCallback from './pages/AuthCallback';
+import Onboarding from './pages/Onboarding';
+import Setup from './pages/Setup';
+import MasterclassSessions from './pages/MasterclassSessions';
+import MasterclassSessionDetail from './pages/MasterclassSessionDetail';
+import TeacherMasterclass from './pages/TeacherMasterclass';
+import TeacherMasterclassCohorts from './pages/TeacherMasterclassCohorts';
+import TeacherMasterclassSessions from './pages/TeacherMasterclassSessions';
+import TeacherMasterclassQuizzes from './pages/TeacherMasterclassQuizzes';
+import TeacherMasterclassQuizBuilder from './pages/TeacherMasterclassQuizBuilder';
+import TeacherMasterclassQuizGrade from './pages/TeacherMasterclassQuizGrade';
+import MasterclassQuizzes from './pages/MasterclassQuizzes';
+import MasterclassQuizAttempt from './pages/MasterclassQuizAttempt';
+import MasterclassProgress from './pages/MasterclassProgress';
 import Feed from './pages/Feed';
 import FeedDetail from './pages/FeedDetail';
 import FeedSaved from './pages/FeedSaved';
@@ -25,7 +42,7 @@ import TeacherFeedSources from './pages/TeacherFeedSources';
 import TeacherFeedConceptEditor from './pages/TeacherFeedConceptEditor';
 
 function App() {
-  const { user, role, setUser, setProfile, isLoading, setIsLoading } = useAppStore();
+  const { user, profile, role, setUser, setProfile, isLoading, setIsLoading } = useAppStore();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -117,21 +134,46 @@ function App() {
   // show the app-shell skeleton instead of bouncing through guards. This
   // prevents a brief blank page right after sign-in (user set, role null) where
   // /login → dashboard → /login redirects produce no visible UI.
+  // All guards redirect a wrong-role user to *their own* home via roleHome(),
+  // so the three role spaces (teacher / student / student_group) can never
+  // cross-bounce into an infinite redirect loop.
   const teacherGuard = (el: React.ReactNode) => {
     if (!user) return <Navigate to="/login" replace />;
     if (!role) return <AppShellSkeleton />;
-    return role === 'teacher' ? el : <Navigate to="/student/dashboard" replace />;
+    return role === 'teacher' ? el : <Navigate to={roleHome(role)} replace />;
   };
   const studentGuard = (el: React.ReactNode) => {
     if (!user) return <Navigate to="/login" replace />;
     if (!role) return <AppShellSkeleton />;
-    return role === 'student' ? el : <Navigate to="/teacher/dashboard" replace />;
+    return role === 'student' ? el : <Navigate to={roleHome(role)} replace />;
+  };
+  const groupGuard = (el: React.ReactNode) => {
+    if (!user) return <Navigate to="/login" replace />;
+    if (!role) return <AppShellSkeleton />;
+    if (role !== 'student_group') return <Navigate to={roleHome(role)} replace />;
+    // Mode B users must finish onboarding before reaching the hub.
+    if (profile && profile.onboarding_complete === false) return <Navigate to="/onboarding" replace />;
+    return el;
+  };
+  // Onboarding is reachable only by a student_group user who hasn't finished it.
+  const onboardingGuard = (el: React.ReactNode) => {
+    if (!user) return <Navigate to="/join" replace />;
+    if (!role) return <AppShellSkeleton />;
+    if (role !== 'student_group') return <Navigate to={roleHome(role)} replace />;
+    if (profile && profile.onboarding_complete === true) return <Navigate to="/masterclass" replace />;
+    return el;
   };
 
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={!user ? <Login /> : (role ? <Navigate to={role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard'} replace /> : <AppShellSkeleton />)} />
+        <Route path="/login" element={!user ? <Login /> : (role ? <Navigate to={roleHome(role)} replace /> : <AppShellSkeleton />)} />
+
+        {/* Mode B public auth surface */}
+        <Route path="/join" element={!user ? <Join /> : (role ? <Navigate to={roleHome(role)} replace /> : <AppShellSkeleton />)} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/setup" element={<Setup />} />
+        <Route path="/onboarding" element={onboardingGuard(<Onboarding />)} />
 
         {/* Teacher Routes */}
         <Route path="/teacher/dashboard" element={teacherGuard(<TeacherDashboard />)} />
@@ -147,6 +189,13 @@ function App() {
         <Route path="/teacher/feed/new" element={teacherGuard(<TeacherFeedConceptEditor />)} />
         <Route path="/teacher/feed/edit/:id" element={teacherGuard(<TeacherFeedConceptEditor />)} />
         <Route path="/teacher/feed/view/:id" element={teacherGuard(<FeedDetail />)} />
+        <Route path="/teacher/masterclass" element={teacherGuard(<TeacherMasterclass />)} />
+        <Route path="/teacher/masterclass/cohorts" element={teacherGuard(<TeacherMasterclassCohorts />)} />
+        <Route path="/teacher/masterclass/sessions" element={teacherGuard(<TeacherMasterclassSessions />)} />
+        <Route path="/teacher/masterclass/quizzes" element={teacherGuard(<TeacherMasterclassQuizzes />)} />
+        <Route path="/teacher/masterclass/quizzes/new" element={teacherGuard(<TeacherMasterclassQuizBuilder />)} />
+        <Route path="/teacher/masterclass/quizzes/:id/edit" element={teacherGuard(<TeacherMasterclassQuizBuilder />)} />
+        <Route path="/teacher/masterclass/quizzes/:id/grade" element={teacherGuard(<TeacherMasterclassQuizGrade />)} />
         <Route path="/teacher/students" element={teacherGuard(<Students />)} />
         <Route path="/teacher/notifications" element={teacherGuard(<Notifications />)} />
         <Route path="/teacher/settings" element={teacherGuard(<Settings />)} />
@@ -165,6 +214,18 @@ function App() {
         <Route path="/student/feed/:id" element={studentGuard(<FeedDetail />)} />
         <Route path="/student/notifications" element={studentGuard(<Notifications />)} />
         <Route path="/student/settings" element={studentGuard(<Settings />)} />
+
+        {/* Mode B — AI Masterclass Hub (student_group) */}
+        <Route path="/masterclass" element={groupGuard(<Masterclass />)} />
+        <Route path="/masterclass/sessions" element={groupGuard(<MasterclassSessions />)} />
+        <Route path="/masterclass/sessions/:id" element={groupGuard(<MasterclassSessionDetail />)} />
+        <Route path="/masterclass/quizzes" element={groupGuard(<MasterclassQuizzes />)} />
+        <Route path="/masterclass/quizzes/:id" element={groupGuard(<MasterclassQuizAttempt />)} />
+        <Route path="/masterclass/progress" element={groupGuard(<MasterclassProgress />)} />
+        <Route path="/masterclass/feed" element={groupGuard(<Feed />)} />
+        <Route path="/masterclass/feed/saved" element={groupGuard(<FeedSaved />)} />
+        <Route path="/masterclass/feed/:id" element={groupGuard(<FeedDetail />)} />
+        <Route path="/masterclass/settings" element={groupGuard(<Settings />)} />
 
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

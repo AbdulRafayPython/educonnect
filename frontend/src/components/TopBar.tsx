@@ -97,7 +97,9 @@ export default function TopBar({ title, onMenuClick }: TopBarProps) {
 
   const goToFull = () => {
     setNotifOpen(false);
-    navigate(role === 'teacher' ? '/teacher/notifications' : '/student/notifications');
+    // Mode B (student_group) is email-first and has no notifications page yet;
+    // send those users to their hub instead of a non-existent guarded route.
+    navigate(role === 'teacher' ? '/teacher/notifications' : role === 'student' ? '/student/notifications' : '/masterclass');
   };
 
   const initials = profile?.full_name
@@ -109,14 +111,16 @@ export default function TopBar({ title, onMenuClick }: TopBarProps) {
   return (
     <header className="sticky top-0 z-30 h-16 flex items-center justify-between gap-2 px-3 sm:px-6 bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant/20 pt-[env(safe-area-inset-top)]">
       <div className="flex items-center gap-2 min-w-0 flex-1">
-        <button
-          type="button"
-          onClick={onMenuClick}
-          aria-label="Open menu"
-          className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-container active:bg-surface-container/80 transition-colors text-on-surface-variant -ml-1"
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: '1.4rem' }}>menu</span>
-        </button>
+        {onMenuClick && (
+          <button
+            type="button"
+            onClick={onMenuClick}
+            aria-label="Open menu"
+            className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-container active:bg-surface-container/80 transition-colors text-on-surface-variant -ml-1"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '1.4rem' }}>menu</span>
+          </button>
+        )}
         <h1 className="text-base font-bold text-on-surface tracking-tight truncate">{title}</h1>
       </div>
 
