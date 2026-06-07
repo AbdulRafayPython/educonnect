@@ -52,3 +52,6 @@ supabase/.temp/
 /*.png
 /*.jpg
 /*.jpeg
+
+# Source design assets kept locally only (the banner is copied into frontend/public)
+/AI Masterclass/

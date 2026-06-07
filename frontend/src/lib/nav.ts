@@ -2,30 +2,33 @@ export interface NavItem {
   icon: string;
   label: string;
   to: string;
+  // Optional uppercase group header rendered above this item in the sidebar
+  // (Mentori-style sections). Items without a section render ungrouped.
+  section?: string;
 }
 
 // Mode A (1:1 Private Track) teacher nav. Crossing into Mode B is done via the
 // TeacherModeSwitcher in the sidebar, not a nav entry.
 export const teacherNav: NavItem[] = [
-  { icon: 'dashboard', label: 'Dashboard', to: '/teacher/dashboard' },
-  { icon: 'school', label: 'Courses', to: '/teacher/courses' },
+  { icon: 'dashboard', label: 'Dashboard', to: '/teacher/dashboard', section: 'Overview' },
+  { icon: 'school', label: 'Courses', to: '/teacher/courses', section: 'Teaching' },
   { icon: 'event', label: 'Sessions', to: '/teacher/sessions' },
   { icon: 'description', label: 'Documents', to: '/teacher/documents' },
   { icon: 'slideshow', label: 'Slides', to: '/teacher/slides' },
   { icon: 'quiz', label: 'Quizzes', to: '/teacher/quizzes' },
-  { icon: 'feed', label: 'AI Feed', to: '/teacher/feed' },
+  { icon: 'feed', label: 'AI Feed', to: '/teacher/feed', section: 'Engagement' },
   { icon: 'group', label: 'Students', to: '/teacher/students' },
   { icon: 'notifications', label: 'Notifications', to: '/teacher/notifications' },
-  { icon: 'settings', label: 'Settings', to: '/teacher/settings' },
+  { icon: 'settings', label: 'Settings', to: '/teacher/settings', section: 'Account' },
 ];
 
 // Mode B (AI Masterclass Hub) teacher admin nav.
 export const teacherMasterclassNav: NavItem[] = [
-  { icon: 'dashboard', label: 'Overview', to: '/teacher/masterclass' },
+  { icon: 'dashboard', label: 'Overview', to: '/teacher/masterclass', section: 'Masterclass' },
   { icon: 'groups', label: 'Cohorts', to: '/teacher/masterclass/cohorts' },
   { icon: 'event', label: 'Sessions', to: '/teacher/masterclass/sessions' },
   { icon: 'quiz', label: 'Quizzes', to: '/teacher/masterclass/quizzes' },
-  { icon: 'notifications', label: 'Notifications', to: '/teacher/notifications' },
+  { icon: 'notifications', label: 'Notifications', to: '/teacher/notifications', section: 'Account' },
   { icon: 'settings', label: 'Settings', to: '/teacher/settings' },
 ];
 

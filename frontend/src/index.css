@@ -1,57 +1,168 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: `dark:` utilities resolve against html.dark. We mostly
+   rely on the token overrides in `.dark` below (so every semantic utility flips
+   automatically), but this keeps explicit `dark:` variants available too. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  --color-surface-container-high: #e7e8e9;
-  --color-secondary-fixed-dim: #bbc7e2;
-  --color-tertiary-container: #541d02;
-  --color-tertiary-fixed: #ffdbcd;
-  --color-inverse-surface: #2e3132;
+  /* ── Mentori redesign palette ──────────────────────────────────────────
+     Light theme, near-black actions, violet brand accent.
+     Token NAMES are kept stable so every page inherits the new look; only
+     values changed. `primary` now maps to near-black (Mentori's action/heading
+     color); the violet brand lives in the new `brand` tokens + academic-gradient. */
+
+  /* Surfaces — page is light grey, cards/sidebar are white. */
+  --color-background: #f4f4f6;
+  --color-surface: #ffffff;
+  --color-surface-bright: #ffffff;
   --color-surface-container-lowest: #ffffff;
-  --color-inverse-on-surface: #f0f1f2;
-  --color-outline: #747781;
-  --color-on-tertiary-fixed: #360f00;
-  --color-surface-dim: #d9dadb;
-  --color-on-primary-fixed: #001b3f;
-  --color-on-secondary-container: #58637a;
-  --color-on-surface: #191c1d;
-  --color-primary-fixed: #d7e2ff;
-  --color-on-secondary: #ffffff;
-  --color-surface-container: #edeeef;
-  --color-inverse-primary: #abc7ff;
-  --color-background: #f8f9fa;
-  --color-error: #ba1a1a;
-  --color-surface-container-highest: #e1e3e4;
-  --color-primary-container: #002d62;
-  --color-on-secondary-fixed-variant: #3c475d;
-  --color-surface-container-low: #f3f4f5;
-  --color-surface-variant: #e1e3e4;
-  --color-on-primary-container: #7796d1;
-  --color-on-error: #ffffff;
-  --color-on-secondary-fixed: #101c30;
-  --color-primary-fixed-dim: #abc7ff;
-  --color-on-primary-fixed-variant: #24467c;
-  --color-surface: #f8f9fa;
-  --color-error-container: #ffdad6;
+  --color-surface-container-low: #ffffff;
+  --color-surface-container: #f4f4f5;
+  --color-surface-container-high: #ececee;
+  --color-surface-container-highest: #e4e4e7;
+  --color-surface-variant: #f4f4f5;
+  --color-surface-dim: #e9e9ec;
+  --color-surface-tint: #7c5cff;
+  --color-inverse-surface: #2a2a2e;
+  --color-inverse-on-surface: #f4f4f5;
+
+  /* Primary == near-black (headings, primary buttons, active nav pill). */
+  --color-primary: #18181b;
   --color-on-primary: #ffffff;
-  --color-outline-variant: #c4c6d1;
-  --color-surface-bright: #f8f9fa;
-  --color-on-surface-variant: #43474f;
-  --color-secondary: #535e76;
-  --color-primary: #00193c;
-  --color-tertiary-fixed-dim: #ffb597;
-  --color-on-background: #191c1d;
-  --color-on-tertiary-container: #d4815d;
-  --color-on-error-container: #93000a;
-  --color-secondary-fixed: #d7e2fe;
-  --color-tertiary: #330e00;
+  --color-primary-container: #ede9fe;
+  --color-on-primary-container: #6d28d9;
+  --color-primary-fixed: #ede9fe;
+  --color-primary-fixed-dim: #c4b5fd;
+  --color-on-primary-fixed: #2e1065;
+  --color-on-primary-fixed-variant: #6d28d9;
+  --color-inverse-primary: #c4b5fd;
+
+  /* Brand == violet accent (logo, accent tints, gradients). */
+  --color-brand: #7c5cff;
+  --color-brand-dim: #a78bfa;
+  --color-brand-container: #ede9fe;
+  --color-on-brand: #ffffff;
+  --color-on-brand-container: #5b21b6;
+
+  /* Text + lines. */
+  --color-on-surface: #18181b;
+  --color-on-background: #18181b;
+  --color-on-surface-variant: #71717a;
+  --color-secondary: #71717a;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #f4f4f5;
+  --color-on-secondary-container: #52525b;
+  --color-secondary-fixed: #ede9fe;
+  --color-secondary-fixed-dim: #ddd6fe;
+  --color-on-secondary-fixed: #2e1065;
+  --color-on-secondary-fixed-variant: #6d28d9;
+  --color-outline: #a1a1aa;
+  --color-outline-variant: #e4e4e7;
+
+  /* Success (Published) + error (Unpublished/destructive). */
+  --color-success: #16a34a;
+  --color-success-container: #dcfce7;
+  --color-on-success-container: #15803d;
+  --color-error: #dc2626;
+  --color-on-error: #ffffff;
+  --color-error-container: #fee2e2;
+  --color-on-error-container: #991b1b;
+
+  /* Tertiary kept as a warm amber accent (used by a few status chips). */
+  --color-tertiary: #92400e;
   --color-on-tertiary: #ffffff;
-  --color-secondary-container: #d4e0fc;
-  --color-on-tertiary-fixed-variant: #743417;
-  --color-surface-tint: #3e5e95;
+  --color-tertiary-container: #fef3c7;
+  --color-on-tertiary-container: #b45309;
+  --color-tertiary-fixed: #fef3c7;
+  --color-tertiary-fixed-dim: #fcd34d;
+  --color-on-tertiary-fixed: #451a03;
+  --color-on-tertiary-fixed-variant: #b45309;
 
   --font-headline: "Public Sans", sans-serif;
   --font-body: "Public Sans", sans-serif;
   --font-label: "Public Sans", sans-serif;
+}
+
+/* ── Dark mode ───────────────────────────────────────────────────────────
+   Overrides the token VALUES so every semantic utility (bg-surface,
+   text-on-surface, bg-primary, border-outline-variant, …) flips with no
+   per-component changes. `primary` stays the max-contrast color → near-white
+   in dark (white buttons / active pills on near-black), brand stays violet. */
+.dark {
+  /* Surfaces — deep near-black with subtly elevated cards. */
+  --color-background: #0a0a0c;
+  --color-surface: #161618;
+  --color-surface-bright: #1f1f23;
+  --color-surface-container-lowest: #131316;
+  --color-surface-container-low: #161618;
+  --color-surface-container: #1f1f23;
+  --color-surface-container-high: #26262b;
+  --color-surface-container-highest: #2e2e34;
+  --color-surface-variant: #1f1f23;
+  --color-surface-dim: #0a0a0c;
+  --color-surface-tint: #a78bfa;
+  --color-inverse-surface: #fafafa;
+  --color-inverse-on-surface: #18181b;
+
+  /* Primary == near-white (headings, primary buttons, active nav pill). */
+  --color-primary: #fafafa;
+  --color-on-primary: #18181b;
+  --color-primary-container: #2e1065;
+  --color-on-primary-container: #c4b5fd;
+  --color-primary-fixed: #2e1065;
+  --color-primary-fixed-dim: #4c1d95;
+  --color-on-primary-fixed: #ede9fe;
+  --color-on-primary-fixed-variant: #c4b5fd;
+  --color-inverse-primary: #18181b;
+
+  /* Brand violet — a touch brighter so it sings on dark. */
+  --color-brand: #8b5cf6;
+  --color-brand-dim: #7c3aed;
+  --color-brand-container: #2e1065;
+  --color-on-brand: #ffffff;
+  --color-on-brand-container: #ddd6fe;
+
+  /* Text + lines. */
+  --color-on-surface: #fafafa;
+  --color-on-background: #fafafa;
+  --color-on-surface-variant: #a1a1aa;
+  --color-secondary: #a1a1aa;
+  --color-on-secondary: #18181b;
+  --color-secondary-container: #1f1f23;
+  --color-on-secondary-container: #d4d4d8;
+  --color-secondary-fixed: #2e1065;
+  --color-secondary-fixed-dim: #4c1d95;
+  --color-on-secondary-fixed: #ede9fe;
+  --color-on-secondary-fixed-variant: #c4b5fd;
+  --color-outline: #52525b;
+  --color-outline-variant: #2a2a2e;
+
+  /* Status — vivid on dark, translucent containers. */
+  --color-success: #22c55e;
+  --color-success-container: color-mix(in srgb, #22c55e 18%, transparent);
+  --color-on-success-container: #4ade80;
+  --color-error: #f87171;
+  --color-on-error: #18181b;
+  --color-error-container: color-mix(in srgb, #f87171 18%, transparent);
+  --color-on-error-container: #fca5a5;
+
+  --color-tertiary: #fbbf24;
+  --color-on-tertiary: #18181b;
+  --color-tertiary-container: color-mix(in srgb, #fbbf24 18%, transparent);
+  --color-on-tertiary-container: #fcd34d;
+  --color-tertiary-fixed: #4c1d95;
+  --color-tertiary-fixed-dim: #fcd34d;
+  --color-on-tertiary-fixed: #fef3c7;
+  --color-on-tertiary-fixed-variant: #fcd34d;
+}
+
+/* Smooth the flip (but never animate on first paint / reduced motion). */
+.theme-anim,
+.theme-anim *,
+.theme-anim *::before,
+.theme-anim *::after {
+  transition: background-color 280ms ease, border-color 280ms ease, color 280ms ease, fill 280ms ease;
 }
 
 @layer base {
@@ -98,8 +209,20 @@
 }
 
 @layer utilities {
+  /* Brand violet gradient — logo tiles, accent surfaces, fallback avatars.
+     (Name kept as `academic-gradient` so existing call sites pick it up.) */
   .academic-gradient {
-    background: linear-gradient(135deg, #00193c 0%, #002d62 100%);
+    background: linear-gradient(135deg, #7c5cff 0%, #6d28d9 100%);
+  }
+  /* Mentori card surface: white, hairline border, whisper-soft shadow. */
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 1rem;
+    box-shadow: 0 1px 2px rgba(9, 9, 11, 0.04);
+  }
+  .dark .card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
   }
   .ghost-border:focus-within {
     box-shadow: 0 0 0 1px var(--color-outline-variant);
@@ -111,7 +234,10 @@
   }
   .hover-lift:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 24px -12px rgba(0, 25, 60, 0.18);
+    box-shadow: 0 14px 28px -16px rgba(9, 9, 11, 0.22);
+  }
+  .dark .hover-lift:hover {
+    box-shadow: 0 16px 32px -16px rgba(0, 0, 0, 0.75);
   }
   .press-shrink {
     transition: transform 120ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -135,6 +261,26 @@
   }
   .fade-in-up {
     animation: fade-in-up 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  /* Cinematic auth pages — iridescent fallback orb + twinkling starfield. */
+  .hero-blob {
+    width: min(72%, 22rem);
+    aspect-ratio: 1;
+    border-radius: 9999px;
+    background: conic-gradient(from 0deg, #06b6d4, #7c5cff, #b5179e, #4cc9f0, #22d3ee, #06b6d4);
+    filter: blur(40px) saturate(1.35);
+    opacity: 0.78;
+    animation: hero-spin 16s linear infinite;
+  }
+  @keyframes hero-spin {
+    to { transform: rotate(360deg); }
+  }
+  .twinkle {
+    animation: twinkle 4s ease-in-out infinite;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.15; }
+    50% { opacity: 0.9; }
   }
   @keyframes fade-in-up {
     from { opacity: 0; transform: translateY(6px); }

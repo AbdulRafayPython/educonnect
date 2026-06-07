@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { supabase } from '../lib/supabase';
 import { useAppStore } from '../store/useAppStore';
+import ThemeToggle from './ThemeToggle';
 
 interface TopBarProps {
   title: string;
@@ -32,7 +33,7 @@ const typeIcons: Record<string, string> = {
 
 export default function TopBar({ title, onMenuClick }: TopBarProps) {
   const navigate = useNavigate();
-  const { profile, user, role, setUser, setProfile } = useAppStore();
+  const { profile, user, role } = useAppStore();
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifs, setNotifs] = useState<Notif[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -77,13 +78,6 @@ export default function TopBar({ title, onMenuClick }: TopBarProps) {
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setProfile(null);
-    navigate('/login');
-  };
-
   const markRead = async (id: string) => {
     await supabase.from('notifications').update({ is_read: true }).eq('id', id);
     setNotifs((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
@@ -125,6 +119,8 @@ export default function TopBar({ title, onMenuClick }: TopBarProps) {
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        <ThemeToggle />
+
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setNotifOpen((v) => !v)}
@@ -175,10 +171,9 @@ export default function TopBar({ title, onMenuClick }: TopBarProps) {
           )}
         </div>
 
-        <button
-          onClick={handleLogout}
-          title="Click to sign out"
-          className="flex items-center gap-2.5 pl-1 pr-3 py-1 rounded-xl hover:bg-surface-container transition-colors group"
+        <div
+          title={profile?.full_name || 'User'}
+          className="flex items-center gap-2.5 pl-1 pr-1.5 py-1 rounded-xl"
         >
           {profile?.avatar_url ? (
             <img src={profile.avatar_url} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />
@@ -187,11 +182,8 @@ export default function TopBar({ title, onMenuClick }: TopBarProps) {
               {initials}
             </div>
           )}
-          <div className="hidden md:flex flex-col items-start leading-none">
-            <span className="text-xs font-bold text-on-surface truncate max-w-[100px]">{profile?.full_name || 'User'}</span>
-            <span className="text-[0.6rem] uppercase tracking-wider text-secondary/60 font-semibold mt-0.5 group-hover:text-error transition-colors">Sign out</span>
-          </div>
-        </button>
+          <span className="hidden md:block text-xs font-bold text-on-surface truncate max-w-[120px]">{profile?.full_name || 'User'}</span>
+        </div>
       </div>
     </header>
   );
