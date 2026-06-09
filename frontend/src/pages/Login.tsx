@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAppStore } from '../store/useAppStore';
 import { roleHome } from '../lib/nav';
 import CinematicBg from '../components/CinematicBg';
-import HeroStage from '../components/HeroStage';
+import HeroVideo from '../components/HeroVideo';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -72,11 +72,10 @@ export default function Login() {
       {/* Full-bleed nebula spanning the whole page (darkens toward the right). */}
       <CinematicBg />
 
-      {/* 3D object — full-bleed canvas (no container edge to seam). The object
-          is pushed left (see HeroStage), and the right third fades to solid dark
-          so the scene never reaches the form. */}
+      {/* Hero video — full-bleed, pushed left (object-position), and the right
+          third fades to solid dark so the scene never reaches the form. */}
       <div className="absolute inset-0 pointer-events-none">
-        <HeroStage />
+        <HeroVideo />
         {/* desktop: fade the right side to dark, fully opaque before the form */}
         <div className="hidden lg:block absolute inset-0" style={{ background: 'linear-gradient(90deg, transparent 26%, rgba(4,6,15,0.55) 44%, #04060f 60%)' }} />
         {/* mobile: fade out to the bottom */}
@@ -89,7 +88,7 @@ export default function Login() {
       <div className="relative z-10 grid lg:grid-cols-2 min-h-[100dvh]">
 
         {/* ── Showcase copy (over the 3D) ─────────────────────────────────── */}
-        <section className="relative flex flex-col justify-between gap-10 p-8 lg:p-12 pointer-events-none min-h-[46vh] lg:min-h-0">
+        <section className="relative flex flex-col justify-start lg:justify-between gap-8 lg:gap-10 p-8 lg:p-12 pointer-events-none min-h-[38vh] lg:min-h-0">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#0a5cff,#7c5cff)' }}>
               <span className="material-symbols-outlined text-white" style={{ fontSize: '1.15rem' }}>school</span>
