@@ -28,6 +28,7 @@ export const teacherMasterclassNav: NavItem[] = [
   { icon: 'groups', label: 'Cohorts', to: '/teacher/masterclass/cohorts' },
   { icon: 'event', label: 'Sessions', to: '/teacher/masterclass/sessions' },
   { icon: 'quiz', label: 'Quizzes', to: '/teacher/masterclass/quizzes' },
+  { icon: 'leaderboard', label: 'Leaderboard', to: '/teacher/masterclass/leaderboard' },
   { icon: 'notifications', label: 'Notifications', to: '/teacher/notifications', section: 'Account' },
   { icon: 'settings', label: 'Settings', to: '/teacher/settings' },
 ];
@@ -56,12 +57,14 @@ export const masterclassNav: NavItem[] = [
   { icon: 'dashboard', label: 'Home', to: '/masterclass' },
   { icon: 'event', label: 'Sessions', to: '/masterclass/sessions' },
   { icon: 'quiz', label: 'Quizzes', to: '/masterclass/quizzes' },
+  { icon: 'leaderboard', label: 'Leaderboard', to: '/masterclass/leaderboard' },
   { icon: 'trending_up', label: 'Progress', to: '/masterclass/progress' },
   { icon: 'feed', label: 'AI Feed', to: '/masterclass/feed' },
   { icon: 'settings', label: 'Settings', to: '/masterclass/settings' },
 ];
 // Note: the mobile bottom tab bar caps at the first 4 (PRD §8.5 — the core
-// learning loop); Feed + Settings live in the desktop sidebar and the Home hub.
+// learning loop): Home, Sessions, Quizzes, Leaderboard. Progress + Feed +
+// Settings live in the desktop sidebar and the Home hub.
 
 export type Role = 'teacher' | 'student' | 'student_group' | null;
 

@@ -34,6 +34,7 @@ import TeacherMasterclassQuizGrade from './pages/TeacherMasterclassQuizGrade';
 import MasterclassQuizzes from './pages/MasterclassQuizzes';
 import MasterclassQuizAttempt from './pages/MasterclassQuizAttempt';
 import MasterclassProgress from './pages/MasterclassProgress';
+import MasterclassLeaderboard from './pages/MasterclassLeaderboard';
 import Feed from './pages/Feed';
 import FeedDetail from './pages/FeedDetail';
 import FeedSaved from './pages/FeedSaved';
@@ -196,6 +197,7 @@ function App() {
         <Route path="/teacher/masterclass/quizzes/new" element={teacherGuard(<TeacherMasterclassQuizBuilder />)} />
         <Route path="/teacher/masterclass/quizzes/:id/edit" element={teacherGuard(<TeacherMasterclassQuizBuilder />)} />
         <Route path="/teacher/masterclass/quizzes/:id/grade" element={teacherGuard(<TeacherMasterclassQuizGrade />)} />
+        <Route path="/teacher/masterclass/leaderboard" element={teacherGuard(<MasterclassLeaderboard />)} />
         <Route path="/teacher/students" element={teacherGuard(<Students />)} />
         <Route path="/teacher/notifications" element={teacherGuard(<Notifications />)} />
         <Route path="/teacher/settings" element={teacherGuard(<Settings />)} />
@@ -222,6 +224,7 @@ function App() {
         <Route path="/masterclass/quizzes" element={groupGuard(<MasterclassQuizzes />)} />
         <Route path="/masterclass/quizzes/:id" element={groupGuard(<MasterclassQuizAttempt />)} />
         <Route path="/masterclass/progress" element={groupGuard(<MasterclassProgress />)} />
+        <Route path="/masterclass/leaderboard" element={groupGuard(<MasterclassLeaderboard />)} />
         <Route path="/masterclass/feed" element={groupGuard(<Feed />)} />
         <Route path="/masterclass/feed/saved" element={groupGuard(<FeedSaved />)} />
         <Route path="/masterclass/feed/:id" element={groupGuard(<FeedDetail />)} />

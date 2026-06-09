@@ -166,6 +166,46 @@ export const isJoinableMC = (scheduledAt: string, durationMin: number): boolean 
   return now >= start - 10 * 60_000 && now <= end;
 };
 
+// ── Leaderboard (AI Masterclass) ─────────────────────────────────────────────
+// One safe row per learner, returned by the masterclass_leaderboard() RPC.
+// Points come only from *graded* submissions; pending ones count as activity.
+export interface LeaderboardRow {
+  rank: number;
+  user_id: string;
+  display_name: string;
+  avatar_url: string | null;
+  cohort_id: string | null;
+  cohort_name: string | null;
+  age_group: AgeGroup | null;
+  total_points: number;
+  graded_quizzes: number;
+  submitted_quizzes: number;
+  possible_points: number;
+  completion_percent: number;
+}
+
+// XP tiers for the gaming feel — derived purely from earned points so the badge
+// is stable regardless of cohort size. Thresholds are deliberately gentle.
+export interface Tier { name: string; min: number; color: string; badge: string }
+export const tiers: Tier[] = [
+  { name: 'Platinum', min: 80, color: '#22D3EE', badge: 'bg-[#22D3EE]/15 text-[#0E7490]' },
+  { name: 'Gold',     min: 50, color: '#F59E0B', badge: 'bg-[#F59E0B]/15 text-[#B45309]' },
+  { name: 'Silver',   min: 25, color: '#94A3B8', badge: 'bg-[#94A3B8]/20 text-[#475569]' },
+  { name: 'Bronze',   min: 0,  color: '#D97706', badge: 'bg-[#D97706]/15 text-[#92400E]' },
+];
+export const tierOf = (points: number): Tier =>
+  tiers.find((t) => points >= t.min) ?? tiers[tiers.length - 1];
+
+// Fetch the leaderboard. Pass a cohort id to scope server-side, else all Mode B
+// learners are returned (filter by age group client-side for the tab bar).
+export async function fetchLeaderboard(cohortId?: string): Promise<LeaderboardRow[]> {
+  const { data, error } = await supabase.rpc('masterclass_leaderboard', {
+    p_cohort_id: cohortId ?? null,
+  });
+  if (error) throw error;
+  return (data as LeaderboardRow[]) ?? [];
+}
+
 export interface GeneratedSession {
   week_number: number;
   title: string;
