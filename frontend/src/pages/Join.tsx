@@ -40,7 +40,7 @@ export default function Join() {
           />
           <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-white/[0.03]">
             <img
-              src="/ai-masterclass-banner.png"
+              src="/ai-masterclass-banner.webp"
               alt="Zero to Hero — AI Sessions by Abdul Rafay"
               className="w-full h-auto block"
               loading="eager"
