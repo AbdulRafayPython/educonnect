@@ -5,7 +5,7 @@ import { masterclassNav } from '../lib/nav';
 import { useAppStore } from '../store/useAppStore';
 import { supabase } from '../lib/supabase';
 import { useCountdown, formatLocal } from '../lib/time';
-import { cohortMeta, isJoinableMC, recordAttendance, sessionTypeLabel, type AgeGroup, type MasterclassSession } from '../lib/masterclass';
+import { cohortMeta, isJoinableMC, recordAttendance, sessionTypeLabel, weekBanner, type AgeGroup, type MasterclassSession } from '../lib/masterclass';
 
 export default function Masterclass() {
   const { profile } = useAppStore();
@@ -56,26 +56,30 @@ export default function Masterclass() {
         {loading ? (
           <div className="h-48 rounded-2xl bg-surface-container/40 animate-pulse" />
         ) : next ? (
-          <div className="rounded-2xl academic-gradient text-white p-6 sm:p-8 shadow-xl">
-            <p className="text-[0.65rem] font-bold uppercase tracking-widest text-white/70">Next up · Week {next.week_number} · {sessionTypeLabel[next.session_type]}</p>
-            <h3 className="text-xl font-bold mt-1.5">{next.title}</h3>
-            <p className="text-sm text-white/80 mt-1">{formatLocal(next.scheduled_at, 'EEEE, MMM d · h:mm a')}</p>
+          <div className="relative rounded-2xl academic-gradient text-white p-6 sm:p-8 shadow-xl overflow-hidden">
+            <img src={weekBanner(next.week_number)} alt="" className="absolute inset-0 w-full h-full object-cover opacity-25" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#00193c] via-[#00193c]/85 to-transparent" />
+            <div className="relative">
+              <p className="text-[0.65rem] font-bold uppercase tracking-widest text-white/70">Next up · Week {next.week_number} · {sessionTypeLabel[next.session_type]}</p>
+              <h3 className="text-xl font-bold mt-1.5">{next.title}</h3>
+              <p className="text-sm text-white/80 mt-1">{formatLocal(next.scheduled_at, 'EEEE, MMM d · h:mm a')}</p>
 
-            {!joinable ? (
-              <div className="flex gap-2.5 mt-6">
-                {([['days', countdown.days], ['hrs', countdown.hours], ['min', countdown.minutes], ['sec', countdown.seconds]] as const).map(([label, val]) => (
-                  <div key={label} className="flex-1 bg-white/10 rounded-xl py-3 text-center backdrop-blur-sm">
-                    <div className="text-2xl font-extrabold tabular-nums leading-none" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{String(val).padStart(2, '0')}</div>
-                    <div className="text-[0.6rem] font-bold uppercase tracking-widest text-white/60 mt-1.5">{label}</div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <a href={next.meeting_link} target="_blank" rel="noopener noreferrer" onClick={() => recordAttendance(next.id)} className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-white text-primary font-bold text-sm rounded-xl shadow-lg hover:bg-white/90 transition-all active:scale-[0.98]">
-                <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>video_call</span>
-                Join class now
-              </a>
-            )}
+              {!joinable ? (
+                <div className="flex gap-2.5 mt-6">
+                  {([['days', countdown.days], ['hrs', countdown.hours], ['min', countdown.minutes], ['sec', countdown.seconds]] as const).map(([label, val]) => (
+                    <div key={label} className="flex-1 bg-white/10 rounded-xl py-3 text-center backdrop-blur-sm">
+                      <div className="text-2xl font-extrabold tabular-nums leading-none" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{String(val).padStart(2, '0')}</div>
+                      <div className="text-[0.6rem] font-bold uppercase tracking-widest text-white/60 mt-1.5">{label}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <a href={next.meeting_link} target="_blank" rel="noopener noreferrer" onClick={() => recordAttendance(next.id)} className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-white text-primary font-bold text-sm rounded-xl shadow-lg hover:bg-white/90 transition-all active:scale-[0.98]">
+                  <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>video_call</span>
+                  Join class now
+                </a>
+              )}
+            </div>
           </div>
         ) : (
           <div className="rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-8 text-center">
@@ -95,10 +99,10 @@ export default function Masterclass() {
             </div>
             <div className="space-y-2">
               {upcoming.map((s) => (
-                <Link key={s.id} to={`/masterclass/sessions/${s.id}`} className="flex items-center gap-4 p-4 rounded-xl bg-surface-container-lowest border border-outline-variant/10 hover:border-outline-variant/25 transition-all">
-                  <div className="shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex flex-col items-center justify-center">
-                    <span className="text-[0.5rem] font-bold uppercase text-primary/60 leading-none">Wk</span>
-                    <span className="text-sm font-extrabold text-primary leading-none">{s.week_number}</span>
+                <Link key={s.id} to={`/masterclass/sessions/${s.id}`} className="flex items-center gap-4 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/10 hover:border-outline-variant/25 transition-all">
+                  <div className="relative shrink-0 w-20 h-[45px] rounded-lg overflow-hidden academic-gradient">
+                    <img src={weekBanner(s.week_number)} alt="" loading="lazy" className="w-full h-full object-cover" />
+                    <span className="absolute bottom-0.5 left-1 text-[0.5rem] font-extrabold text-white drop-shadow">Wk {s.week_number}</span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-bold text-on-surface text-sm truncate">{s.title}</p>

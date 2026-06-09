@@ -55,30 +55,44 @@ export const sessionTypeLabel: Record<string, string> = {
   office_hours: 'Office hours',
 };
 
-// 12-week "Zero to Hero AI Sessions" curriculum (PRD §7.1): three phases.
+// 12-week "Zero to Hero AI Sessions" curriculum (PRD §7.1).
+// One shared, mixed-age class per week (low floor, high ceiling). Each week maps
+// to a banner in /public (week-01.webp … week-12.webp) by its `week` number.
 export interface CurriculumWeek {
   week: number;
   title: string;
   phase: string;
+  skill: string; // the headline takeaway for the week
   session_type: MasterclassSession['session_type'];
+  banner: string; // /week-XX.webp
 }
 
+// Public path to a week's banner, derived from its number so DB-stored sessions
+// (which don't carry a banner) can still render the right art via week_number.
+export function weekBanner(week: number): string {
+  return `/week-${String(week).padStart(2, '0')}.webp`;
+}
+
+// Course hero used on the masterclass hub + Join page.
+export const masterclassHeroBanner = '/masterclass-hero.webp';
+
 export const curriculum: CurriculumWeek[] = [
-  // Phase 1 — AI Foundations (weeks 1–4)
-  { week: 1,  phase: 'AI Foundations', title: 'What is AI? Meet your new superpower', session_type: 'class' },
-  { week: 2,  phase: 'AI Foundations', title: 'Talking to AI: prompts that work', session_type: 'class' },
-  { week: 3,  phase: 'AI Foundations', title: 'AI tools tour: ChatGPT, Gemini & friends', session_type: 'class' },
-  { week: 4,  phase: 'AI Foundations', title: 'Staying safe & smart with AI', session_type: 'class' },
-  // Phase 2 — Creating with AI (weeks 5–8)
-  { week: 5,  phase: 'Creating with AI', title: 'Make images & art with AI', session_type: 'class' },
-  { week: 6,  phase: 'Creating with AI', title: 'Write stories, songs & scripts with AI', session_type: 'class' },
-  { week: 7,  phase: 'Creating with AI', title: 'Build a mini website with AI', session_type: 'class' },
-  { week: 8,  phase: 'Creating with AI', title: 'AI for school: research & study helpers', session_type: 'class' },
-  // Phase 3 — Building Agents (weeks 9–12)
-  { week: 9,  phase: 'Building Agents', title: 'What is an AI agent?', session_type: 'class' },
-  { week: 10, phase: 'Building Agents', title: 'Automate tasks with Make.com & Zapier', session_type: 'class' },
-  { week: 11, phase: 'Building Agents', title: 'Build your first AI assistant', session_type: 'class' },
-  { week: 12, phase: 'Building Agents', title: 'Demo day: show your AI project', session_type: 'demo_day' },
+  // Phase 1 — Foundations (weeks 1–2)
+  { week: 1,  phase: 'Foundations',   skill: 'Awareness',                   title: 'AI is already around you',            session_type: 'class',    banner: weekBanner(1) },
+  { week: 2,  phase: 'Foundations',   skill: 'Asking better questions',     title: 'Prompting basics: talking to AI',     session_type: 'class',    banner: weekBanner(2) },
+  // Phase 2 — Everyday AI (weeks 3–6)
+  { week: 3,  phase: 'Everyday AI',   skill: 'Learning support',            title: 'AI for study & learning',             session_type: 'class',    banner: weekBanner(3) },
+  { week: 4,  phase: 'Everyday AI',   skill: 'Communication',               title: 'AI for English & communication',      session_type: 'class',    banner: weekBanner(4) },
+  { week: 5,  phase: 'Everyday AI',   skill: 'Daily-life planning',         title: 'AI for home & daily life',            session_type: 'class',    banner: weekBanner(5) },
+  { week: 6,  phase: 'Everyday AI',   skill: 'Creative output',             title: 'AI for creativity',                   session_type: 'class',    banner: weekBanner(6) },
+  // Phase 3 — Responsible AI (weeks 7–8)
+  { week: 7,  phase: 'Responsible AI', skill: 'Critical thinking',          title: 'AI truth check: spotting mistakes',   session_type: 'class',    banner: weekBanner(7) },
+  { week: 8,  phase: 'Responsible AI', skill: 'Responsible use',            title: 'AI safety, privacy & ethics',         session_type: 'class',    banner: weekBanner(8) },
+  // Phase 4 — Tools & Future (weeks 9–12)
+  { week: 9,  phase: 'Tools & Future', skill: 'Tool selection',             title: 'AI tools beyond ChatGPT',             session_type: 'class',    banner: weekBanner(9) },
+  { week: 10, phase: 'Tools & Future', skill: 'Practical earning awareness', title: 'AI for skills & earning',            session_type: 'class',    banner: weekBanner(10) },
+  { week: 11, phase: 'Tools & Future', skill: 'Latest AI understanding',    title: 'AI agents & the latest AI era',       session_type: 'class',    banner: weekBanner(11) },
+  { week: 12, phase: 'Tools & Future', skill: 'Project presentation',       title: 'Final showcase: your AI project',     session_type: 'demo_day', banner: weekBanner(12) },
 ];
 
 // ── Quizzes (PRD §7.4) ───────────────────────────────────────────────────────
