@@ -207,7 +207,8 @@ export default function MasterclassLeaderboard() {
                             <td className="px-3 py-3">
                               <div className="flex items-center gap-2.5">
                                 <Avatar row={r} size={34} />
-                                <span className="font-bold text-on-surface truncate max-w-[10rem]">{r.display_name}{isMe && <span className="ml-1 text-[0.6rem] font-bold uppercase tracking-widest text-primary">You</span>}</span>
+                                <span className="whitespace-nowrap px-3.5 py-1.5 rounded-full text-sm font-bold transition-all academic-gradient text-white shadow-sm">{r.display_name}</span>
+                                {isMe && <span className="text-[0.6rem] font-bold uppercase tracking-widest text-primary">You</span>}
                               </div>
                             </td>
                             <td className="px-3 py-3 hidden sm:table-cell"><CohortBadge ageGroup={r.age_group} /></td>
