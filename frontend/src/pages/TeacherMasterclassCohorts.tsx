@@ -208,8 +208,15 @@ function RosterTable({ rows }: { rows: Student[] }) {
                       <div className="w-8 h-8 rounded-lg academic-gradient flex items-center justify-center text-white text-[0.65rem] font-bold shrink-0">{initials}</div>
                     )}
                     <div className="min-w-0">
-                      <p className="font-bold text-on-surface truncate">{s.full_name || 'Unnamed'}</p>
-                      <p className="text-xs text-on-surface-variant truncate">{s.email}</p>
+                      <p className="font-bold text-on-surface truncate flex items-center gap-1.5">
+                        {s.full_name || 'Unnamed'}
+                        {s.full_name === 'Aneeq Khan' && (
+                          <span className="inline-flex items-center gap-0.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-white shadow-sm" style={{ background: 'linear-gradient(135deg, rgb(0 123 255) 0%, rgb(12 18 36) 100%)' }}>
+                            PRO<span className="material-symbols-outlined" style={{ fontSize: '0.8rem', fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-xs text-on-surface-variant truncate mt-1">{s.email}</p>
                     </div>
                   </div>
                 </td>
