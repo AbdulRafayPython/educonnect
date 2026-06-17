@@ -41,6 +41,8 @@ import FeedSaved from './pages/FeedSaved';
 import TeacherFeed from './pages/TeacherFeed';
 import TeacherFeedSources from './pages/TeacherFeedSources';
 import TeacherFeedConceptEditor from './pages/TeacherFeedConceptEditor';
+import Messages from './pages/Messages';
+import MasterclassRoom from './pages/MasterclassRoom';
 
 function App() {
   const { user, profile, role, setUser, setProfile, isLoading, setIsLoading } = useAppStore();
@@ -198,7 +200,9 @@ function App() {
         <Route path="/teacher/masterclass/quizzes/:id/edit" element={teacherGuard(<TeacherMasterclassQuizBuilder />)} />
         <Route path="/teacher/masterclass/quizzes/:id/grade" element={teacherGuard(<TeacherMasterclassQuizGrade />)} />
         <Route path="/teacher/masterclass/leaderboard" element={teacherGuard(<MasterclassLeaderboard />)} />
+        <Route path="/teacher/masterclass/room" element={teacherGuard(<MasterclassRoom />)} />
         <Route path="/teacher/students" element={teacherGuard(<Students />)} />
+        <Route path="/teacher/messages" element={teacherGuard(<Messages />)} />
         <Route path="/teacher/notifications" element={teacherGuard(<Notifications />)} />
         <Route path="/teacher/settings" element={teacherGuard(<Settings />)} />
 
@@ -214,6 +218,7 @@ function App() {
         <Route path="/student/feed" element={studentGuard(<Feed />)} />
         <Route path="/student/feed/saved" element={studentGuard(<FeedSaved />)} />
         <Route path="/student/feed/:id" element={studentGuard(<FeedDetail />)} />
+        <Route path="/student/messages" element={studentGuard(<Messages />)} />
         <Route path="/student/notifications" element={studentGuard(<Notifications />)} />
         <Route path="/student/settings" element={studentGuard(<Settings />)} />
 
@@ -228,6 +233,8 @@ function App() {
         <Route path="/masterclass/feed" element={groupGuard(<Feed />)} />
         <Route path="/masterclass/feed/saved" element={groupGuard(<FeedSaved />)} />
         <Route path="/masterclass/feed/:id" element={groupGuard(<FeedDetail />)} />
+        <Route path="/masterclass/messages" element={groupGuard(<Messages />)} />
+        <Route path="/masterclass/room" element={groupGuard(<MasterclassRoom />)} />
         <Route path="/masterclass/settings" element={groupGuard(<Settings />)} />
 
         <Route path="*" element={<Navigate to="/login" replace />} />

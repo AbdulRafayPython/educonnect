@@ -36,7 +36,14 @@ export default function TopBar({ title, onMenuClick }: TopBarProps) {
   const { profile, user, role } = useAppStore();
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifs, setNotifs] = useState<Notif[]>([]);
+  const [chatUnread, setChatUnread] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const messagesRoute = role === 'teacher'
+    ? '/teacher/messages'
+    : role === 'student_group'
+      ? '/masterclass/messages'
+      : '/student/messages';
 
   useEffect(() => {
     if (!user) return;
@@ -67,6 +74,29 @@ export default function TopBar({ title, onMenuClick }: TopBarProps) {
 
     return () => { active = false; supabase.removeChannel(channel); };
   }, [user?.id]);
+
+  // Chat unread badge. Teacher = sum across all student threads; a student =
+  // their single conversation's unread. RLS scopes the rows automatically.
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    const col = role === 'teacher' ? 'teacher_unread' : 'student_unread';
+
+    const load = async () => {
+      const { data } = await supabase.from('chat_conversations').select(col);
+      if (!active || !data) return;
+      const total = (data as Record<string, number>[]).reduce((sum, r) => sum + (r[col] || 0), 0);
+      setChatUnread(total);
+    };
+    load();
+
+    const channel = supabase
+      .channel(`chat-unread-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_conversations' }, () => load())
+      .subscribe();
+
+    return () => { active = false; supabase.removeChannel(channel); };
+  }, [user?.id, role]);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -120,6 +150,19 @@ export default function TopBar({ title, onMenuClick }: TopBarProps) {
 
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         <ThemeToggle />
+
+        <button
+          onClick={() => navigate(messagesRoute)}
+          aria-label="Messages"
+          className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors"
+        >
+          <span className="material-symbols-outlined text-on-surface-variant" style={{ fontSize: '1.25rem' }}>forum</span>
+          {chatUnread > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary border-2 border-surface-container-lowest text-[0.6rem] font-bold text-white flex items-center justify-center">
+              {chatUnread > 9 ? '9+' : chatUnread}
+            </span>
+          )}
+        </button>
 
         <div className="relative" ref={dropdownRef}>
           <button

@@ -18,6 +18,7 @@ export const teacherNav: NavItem[] = [
   { icon: 'quiz', label: 'Quizzes', to: '/teacher/quizzes' },
   { icon: 'feed', label: 'AI Feed', to: '/teacher/feed', section: 'Engagement' },
   { icon: 'group', label: 'Students', to: '/teacher/students' },
+  { icon: 'forum', label: 'Messages', to: '/teacher/messages' },
   { icon: 'notifications', label: 'Notifications', to: '/teacher/notifications' },
   { icon: 'settings', label: 'Settings', to: '/teacher/settings', section: 'Account' },
 ];
@@ -29,7 +30,9 @@ export const teacherMasterclassNav: NavItem[] = [
   { icon: 'event', label: 'Sessions', to: '/teacher/masterclass/sessions' },
   { icon: 'quiz', label: 'Quizzes', to: '/teacher/masterclass/quizzes' },
   { icon: 'leaderboard', label: 'Leaderboard', to: '/teacher/masterclass/leaderboard' },
-  { icon: 'notifications', label: 'Notifications', to: '/teacher/notifications', section: 'Account' },
+  { icon: 'groups', label: 'Group Room', to: '/teacher/masterclass/room' },
+  { icon: 'forum', label: 'Messages', to: '/teacher/messages', section: 'Account' },
+  { icon: 'notifications', label: 'Notifications', to: '/teacher/notifications' },
   { icon: 'settings', label: 'Settings', to: '/teacher/settings' },
 ];
 
@@ -46,6 +49,7 @@ export const studentNav: NavItem[] = [
   { icon: 'slideshow', label: 'Slides', to: '/student/slides' },
   { icon: 'quiz', label: 'Quizzes', to: '/student/quizzes' },
   { icon: 'feed', label: 'AI Feed', to: '/student/feed' },
+  { icon: 'forum', label: 'Messages', to: '/student/messages' },
   { icon: 'notifications', label: 'Notifications', to: '/student/notifications' },
   { icon: 'settings', label: 'Settings', to: '/student/settings' },
 ];
@@ -59,6 +63,8 @@ export const masterclassNav: NavItem[] = [
   { icon: 'quiz', label: 'Quizzes', to: '/masterclass/quizzes' },
   { icon: 'leaderboard', label: 'Leaderboard', to: '/masterclass/leaderboard' },
   { icon: 'trending_up', label: 'Progress', to: '/masterclass/progress' },
+  { icon: 'groups', label: 'Group Room', to: '/masterclass/room' },
+  { icon: 'forum', label: 'Messages', to: '/masterclass/messages' },
   { icon: 'feed', label: 'AI Feed', to: '/masterclass/feed' },
   { icon: 'settings', label: 'Settings', to: '/masterclass/settings' },
 ];
