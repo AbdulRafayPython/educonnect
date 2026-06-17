@@ -107,7 +107,7 @@ export default function TeacherMasterclassSessions() {
       activity_juniors: form.activity_juniors || null,
       activity_advanced: form.activity_advanced || null,
       tools_needed: form.tools_text.trim() ? textToTools(form.tools_text) : null,
-      recording_url: form.recording_url || null,
+      recording_url: form.recording_url.trim() || null,
       summary_md: form.summary_md || null,
     };
     const { error } = editingId
@@ -300,7 +300,10 @@ export default function TeacherMasterclassSessions() {
             <details className="rounded-xl bg-surface-container/40 px-4 py-3">
               <summary className="text-xs font-bold uppercase tracking-widest text-on-surface-variant cursor-pointer">After the session</summary>
               <div className="space-y-3 mt-3">
-                <input placeholder="Recording URL" className="w-full px-4 py-2.5 rounded-xl bg-surface-variant/40 border-none outline-none text-sm text-on-surface" value={form.recording_url} onChange={(e) => setForm((p) => ({ ...p, recording_url: e.target.value }))} />
+                <div>
+                  <label className="block text-[0.6rem] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Recording links — one per line (optional label: “Part 1, https://…”)</label>
+                  <textarea placeholder={'https://…\nPart 2, https://…'} className="w-full px-4 py-2.5 rounded-xl bg-surface-variant/40 border-none outline-none text-sm text-on-surface resize-none h-20" value={form.recording_url} onChange={(e) => setForm((p) => ({ ...p, recording_url: e.target.value }))} />
+                </div>
                 <textarea placeholder="Summary (Markdown)" className="w-full px-4 py-2.5 rounded-xl bg-surface-variant/40 border-none outline-none text-sm text-on-surface resize-none h-20" value={form.summary_md} onChange={(e) => setForm((p) => ({ ...p, summary_md: e.target.value }))} />
               </div>
             </details>

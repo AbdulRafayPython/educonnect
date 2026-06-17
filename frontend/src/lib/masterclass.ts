@@ -172,6 +172,23 @@ export async function recordAttendance(sessionId: string): Promise<void> {
     .upsert({ session_id: sessionId, user_id: user.id, joined_at: new Date().toISOString() }, { onConflict: 'session_id,user_id' });
 }
 
+// Parse a newline-separated list of links (e.g. recording URLs) where each line
+// is either a bare "https://…" or an optionally-labelled "Part 1, https://…".
+// Backward-compatible with a single bare URL. Bare URLs that contain commas
+// (query params) are preserved because the label split requires ", http".
+export function parseSessionLinks(text: string | null | undefined): { label: string; url: string }[] {
+  if (!text) return [];
+  return text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const m = line.match(/^(.*?),\s*(https?:\/\/.+)$/);
+      if (m) return { label: m[1].trim(), url: m[2].trim() };
+      return { label: '', url: line };
+    });
+}
+
 // FR-MC-05: the "Join class" button activates 10 minutes before start.
 export const isJoinableMC = (scheduledAt: string, durationMin: number): boolean => {
   const start = new Date(scheduledAt).getTime();

@@ -5,7 +5,7 @@ import { masterclassNav } from '../lib/nav';
 import { useAppStore } from '../store/useAppStore';
 import { supabase } from '../lib/supabase';
 import { formatLocal } from '../lib/time';
-import { isJoinableMC, recordAttendance, sessionStatusBadge, sessionTypeLabel, weekBanner, type AgeGroup, type MasterclassSession } from '../lib/masterclass';
+import { isJoinableMC, parseSessionLinks, recordAttendance, sessionStatusBadge, sessionTypeLabel, weekBanner, type AgeGroup, type MasterclassSession } from '../lib/masterclass';
 
 const activityField: Record<AgeGroup, keyof MasterclassSession> = {
   little_ones: 'activity_little_ones',
@@ -51,6 +51,7 @@ export default function MasterclassSessionDetail() {
   const myActivity = ageGroup ? (session[activityField[ageGroup]] as string | null) : null;
   const joinable = isJoinableMC(session.scheduled_at, session.duration_min);
   const tools = session.tools_needed ?? [];
+  const recordings = parseSessionLinks(session.recording_url);
 
   return (
     <DashboardLayout title={`Week ${session.week_number}`} navItems={masterclassNav}>
@@ -106,11 +107,16 @@ export default function MasterclassSessionDetail() {
           </Section>
         )}
 
-        {session.recording_url && (
-          <Section icon="smart_display" title="Recording">
-            <a href={session.recording_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline">
-              Watch the recording<span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>open_in_new</span>
-            </a>
+        {recordings.length > 0 && (
+          <Section icon="smart_display" title={recordings.length > 1 ? 'Recordings' : 'Recording'}>
+            <div className="flex flex-col gap-2.5">
+              {recordings.map((r, i) => (
+                <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline">
+                  {r.label || (recordings.length > 1 ? `Watch recording ${i + 1}` : 'Watch the recording')}
+                  <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>open_in_new</span>
+                </a>
+              ))}
+            </div>
           </Section>
         )}
 
