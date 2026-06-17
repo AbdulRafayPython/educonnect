@@ -237,6 +237,51 @@ export async function fetchLeaderboard(cohortId?: string): Promise<LeaderboardRo
   return (data as LeaderboardRow[]) ?? [];
 }
 
+// ── Homework (Google-Classroom-style assignments, PRD §7.x) ──────────────────
+export interface MasterclassHomework {
+  id: string;
+  week_number: number | null;
+  title: string;
+  instructions_md: string;
+  cohort_ids: string[];
+  due_date: string | null;
+  points: number | null;          // null = review-only (no score)
+  attachment_path: string | null; // teacher file in masterclass-materials
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface HomeworkSubmission {
+  id: string;
+  homework_id: string;
+  user_id: string;
+  text: string | null;
+  file_path: string | null;       // masterclass-submissions/<uid>/...
+  submitted_at: string;
+  status: 'submitted' | 'graded' | 'returned';
+  score: number | null;
+  feedback: string | null;
+  graded_at: string | null;
+  graded_by: string | null;
+}
+
+export type HomeworkStatus = 'assigned' | 'submitted' | 'graded';
+
+export const homeworkStatusBadge: Record<HomeworkStatus, string> = {
+  assigned: 'bg-amber-100 text-amber-700',
+  submitted: 'bg-primary/10 text-primary',
+  graded: 'bg-emerald-50 text-emerald-600',
+};
+
+// A student's status for a homework, from their submission (if any). Both
+// 'graded' and 'returned' submissions read as "graded" (reviewed by teacher).
+export const homeworkStatusOf = (sub?: HomeworkSubmission | null): HomeworkStatus =>
+  !sub ? 'assigned' : sub.status === 'submitted' ? 'submitted' : 'graded';
+
+// Past-due helper for the "Late" hint (only meaningful before submitting).
+export const isHomeworkOverdue = (dueDate: string | null): boolean =>
+  !!dueDate && new Date(dueDate).getTime() < Date.now();
+
 export interface GeneratedSession {
   week_number: number;
   title: string;

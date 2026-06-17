@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import { masterclassNav } from '../lib/nav';
+import Markdown from '../components/Markdown';
 import { useAppStore } from '../store/useAppStore';
 import { supabase } from '../lib/supabase';
 import { formatLocal } from '../lib/time';
@@ -122,7 +123,7 @@ export default function MasterclassSessionDetail() {
 
         {session.summary_md && (
           <Section icon="description" title="What we covered">
-            <p className="text-sm text-on-surface whitespace-pre-wrap leading-relaxed">{session.summary_md}</p>
+            <Markdown source={session.summary_md} />
           </Section>
         )}
       </div>

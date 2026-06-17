@@ -44,6 +44,9 @@ export default function Masterclass() {
           </div>
           {/* Mobile-only quick links — Feed & Settings aren't in the 4-tab bottom bar. */}
           <div className="flex items-center gap-1 lg:hidden shrink-0">
+            <Link to="/masterclass/homework" aria-label="Homework" className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-surface-container text-on-surface-variant transition-colors">
+              <span className="material-symbols-outlined" style={{ fontSize: '1.3rem' }}>assignment</span>
+            </Link>
             <Link to="/masterclass/room" aria-label="Group Room" className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-surface-container text-on-surface-variant transition-colors">
               <span className="material-symbols-outlined" style={{ fontSize: '1.3rem' }}>groups</span>
             </Link>
