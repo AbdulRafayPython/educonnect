@@ -35,10 +35,13 @@ export interface MasterclassSession {
   created_at: string;
 }
 
-export const cohortMeta: Record<AgeGroup, { label: string; short: string; color: string; badge: string }> = {
-  little_ones: { label: 'Little Explorers', short: 'Little Ones (5–10)', color: '#A78BFA', badge: 'bg-[#A78BFA]/15 text-[#6D28D9]' },
-  juniors:     { label: 'Junior Builders',  short: 'Juniors (11–15)',  color: '#34D399', badge: 'bg-[#34D399]/15 text-[#047857]' },
-  advanced:    { label: 'AI Architects',    short: 'Advanced (16+)',   color: '#F97316', badge: 'bg-[#F97316]/15 text-[#C2410C]' },
+// `color` = base hue, `deep` = darker end (for the gradient chip), `icon` =
+// Material Symbol. The `<CohortChip>` component renders a solid gradient pill
+// from color→deep with white text, readable in both light and dark themes.
+export const cohortMeta: Record<AgeGroup, { label: string; short: string; color: string; deep: string; icon: string; badge: string }> = {
+  little_ones: { label: 'Little Explorers', short: 'Little Ones (5–10)', color: '#A78BFA', deep: '#7C3AED', icon: 'explore',      badge: 'bg-[#A78BFA]/15 text-[#6D28D9]' },
+  juniors:     { label: 'Junior Builders',  short: 'Juniors (11–15)',  color: '#34D399', deep: '#059669', icon: 'construction', badge: 'bg-[#34D399]/15 text-[#047857]' },
+  advanced:    { label: 'AI Architects',    short: 'Advanced (16+)',   color: '#F97316', deep: '#EA580C', icon: 'architecture', badge: 'bg-[#F97316]/15 text-[#C2410C]' },
 };
 
 export const sessionStatusBadge: Record<string, string> = {
@@ -281,6 +284,123 @@ export const homeworkStatusOf = (sub?: HomeworkSubmission | null): HomeworkStatu
 // Past-due helper for the "Late" hint (only meaningful before submitting).
 export const isHomeworkOverdue = (dueDate: string | null): boolean =>
   !!dueDate && new Date(dueDate).getTime() < Date.now();
+
+// ── Prompt Quest (the "Prompt Arena") ────────────────────────────────────────
+// A game-style, non-MCQ challenge: each learner gets a UNIQUE scenario per round
+// and writes a prompt using the Week-2 5-INGREDIENT recipe. An AI judge (the
+// `grade_prompt` Edge Function) scores it 0-2 per ingredient → /10. Three gated
+// rounds (easy → medium → hard); points fold into masterclass_leaderboard().
+
+export type ArenaRound = 'easy' | 'medium' | 'hard';
+
+// The five ingredients of a good prompt (the Week-2 recipe). Order is canonical.
+export const ARENA_INGREDIENTS: { key: keyof ArenaBreakdown; label: string; icon: string; blurb: string; tip: string }[] = [
+  { key: 'who',     label: 'WHO',     icon: 'badge',                 blurb: 'Give the AI a role',     tip: 'Tell the AI who to be — "Act as a patient tutor / an HR interviewer".' },
+  { key: 'what',    label: 'WHAT',    icon: 'task_alt',              blurb: 'The exact task',         tip: 'Say precisely what you want — not "tell me about cars" but "explain how EV batteries work".' },
+  { key: 'details', label: 'DETAILS', icon: 'tune',                  blurb: "Who it's for & limits",  tip: 'Add audience, level and limits — "for a family of 5, under Rs. 5,000".' },
+  { key: 'output',  label: 'OUTPUT',  icon: 'format_list_bulleted',  blurb: 'The shape of the answer', tip: 'Ask for a format — "in 4 bullet points", "ask me one question at a time".' },
+  { key: 'style',   label: 'STYLE',   icon: 'palette',               blurb: 'Tone & simplicity',      tip: 'Set the voice — "to a 9-year-old, under 100 words, simple English".' },
+];
+
+export interface ArenaBreakdown { who: number; what: number; details: number; output: number; style: number }
+
+export const ARENA_ROUNDS: { key: ArenaRound; label: string; node: string; icon: string; color: string; tagline: string }[] = [
+  { key: 'easy',   label: 'Easy',   node: 'Trailhead', icon: 'hiking',       color: '#22C55E', tagline: 'Warm up with everyday asks.' },
+  { key: 'medium', label: 'Medium', node: 'The Climb', icon: 'trending_up',  color: '#F59E0B', tagline: 'More constraints — details & format start to matter.' },
+  { key: 'hard',   label: 'Hard',   node: 'Summit',    icon: 'flag',         color: '#EF4444', tagline: 'All five ingredients, working together.' },
+];
+
+export const arenaRoundMeta = (round: ArenaRound) => ARENA_ROUNDS.find((r) => r.key === round)!;
+
+export interface ArenaRoundState {
+  round: ArenaRound;
+  unlocked: boolean;
+  attempt_id: string | null;
+  status: 'assigned' | 'submitted' | 'graded' | null;
+  score: number | null;
+  breakdown: ArenaBreakdown | null;
+  feedback: string | null;
+  strengths: string | null;
+  fixes: string | null;
+  prompt_text: string | null;
+  scenario: string | null;
+  audience: string | null;
+}
+
+export interface ArenaState {
+  has_cohort: boolean;
+  cohort_id: string | null;
+  rounds: ArenaRoundState[];
+  total_score: number;
+  max_score: number;
+}
+
+export interface ArenaClaim {
+  attempt_id: string;
+  round: ArenaRound;
+  status: 'assigned' | 'submitted' | 'graded';
+  scenario: string;
+  audience: string | null;
+  prompt_text: string | null;
+  score: number | null;
+  breakdown: ArenaBreakdown | null;
+  feedback: string | null;
+  strengths: string | null;
+  fixes: string | null;
+}
+
+export interface ArenaGradeResult {
+  ok: true;
+  already?: boolean;
+  score: number;
+  breakdown: ArenaBreakdown;
+  feedback: string | null;
+  strengths: string | null;
+  fixes: string | null;
+}
+
+// 0-10 → a 0-5 star count (half-steps), for the reveal animation.
+export const arenaStars = (score: number): number => Math.round((score / 10) * 5 * 2) / 2;
+
+// A friendly verdict for a /10 score.
+export const arenaVerdict = (score: number): { label: string; color: string } =>
+  score >= 9 ? { label: 'Masterful', color: '#22D3EE' }
+  : score >= 7 ? { label: 'Strong prompt', color: '#22C55E' }
+  : score >= 5 ? { label: 'Getting there', color: '#F59E0B' }
+  : { label: 'Keep practising', color: '#EF4444' };
+
+export async function fetchArenaState(): Promise<ArenaState> {
+  const { data, error } = await supabase.rpc('arena_state');
+  if (error) throw error;
+  return data as ArenaState;
+}
+
+export async function claimArenaTopic(round: ArenaRound): Promise<ArenaClaim> {
+  const { data, error } = await supabase.rpc('claim_arena_topic', { p_round: round });
+  if (error) throw error;
+  return data as ArenaClaim;
+}
+
+// Submit a prompt for AI grading. Surfaces the Edge Function's friendly error
+// message (read from the FunctionsHttpError response body) when it fails.
+export async function gradeArenaPrompt(attemptId: string, prompt: string): Promise<ArenaGradeResult> {
+  const { data, error } = await supabase.functions.invoke('grade_prompt', {
+    body: { attempt_id: attemptId, prompt },
+  });
+  if (error) {
+    let msg = 'Scoring failed — please try again in a moment.';
+    try {
+      const ctx = (error as { context?: { json?: () => Promise<{ error?: string }> } }).context;
+      if (ctx?.json) {
+        const j = await ctx.json();
+        if (j?.error) msg = j.error;
+      }
+    } catch { /* keep default */ }
+    throw new Error(msg);
+  }
+  if (!data?.ok) throw new Error(data?.error ?? 'Scoring failed — please try again.');
+  return data as ArenaGradeResult;
+}
 
 export interface GeneratedSession {
   week_number: number;

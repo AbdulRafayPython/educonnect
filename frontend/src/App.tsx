@@ -33,6 +33,8 @@ import TeacherMasterclassQuizBuilder from './pages/TeacherMasterclassQuizBuilder
 import TeacherMasterclassQuizGrade from './pages/TeacherMasterclassQuizGrade';
 import MasterclassQuizzes from './pages/MasterclassQuizzes';
 import MasterclassQuizAttempt from './pages/MasterclassQuizAttempt';
+import MasterclassArena from './pages/MasterclassArena';
+import TeacherMasterclassArena from './pages/TeacherMasterclassArena';
 import MasterclassProgress from './pages/MasterclassProgress';
 import MasterclassLeaderboard from './pages/MasterclassLeaderboard';
 import Feed from './pages/Feed';
@@ -203,6 +205,7 @@ function App() {
         <Route path="/teacher/masterclass/quizzes/new" element={teacherGuard(<TeacherMasterclassQuizBuilder />)} />
         <Route path="/teacher/masterclass/quizzes/:id/edit" element={teacherGuard(<TeacherMasterclassQuizBuilder />)} />
         <Route path="/teacher/masterclass/quizzes/:id/grade" element={teacherGuard(<TeacherMasterclassQuizGrade />)} />
+        <Route path="/teacher/masterclass/arena" element={teacherGuard(<TeacherMasterclassArena />)} />
         <Route path="/teacher/masterclass/homework" element={teacherGuard(<TeacherMasterclassHomework />)} />
         <Route path="/teacher/masterclass/homework/:id/submissions" element={teacherGuard(<TeacherMasterclassHomeworkSubmissions />)} />
         <Route path="/teacher/masterclass/leaderboard" element={teacherGuard(<MasterclassLeaderboard />)} />
@@ -234,6 +237,7 @@ function App() {
         <Route path="/masterclass/sessions/:id" element={groupGuard(<MasterclassSessionDetail />)} />
         <Route path="/masterclass/quizzes" element={groupGuard(<MasterclassQuizzes />)} />
         <Route path="/masterclass/quizzes/:id" element={groupGuard(<MasterclassQuizAttempt />)} />
+        <Route path="/masterclass/arena" element={groupGuard(<MasterclassArena />)} />
         <Route path="/masterclass/homework" element={groupGuard(<MasterclassHomework />)} />
         <Route path="/masterclass/homework/:id" element={groupGuard(<MasterclassHomeworkDetail />)} />
         <Route path="/masterclass/progress" element={groupGuard(<MasterclassProgress />)} />

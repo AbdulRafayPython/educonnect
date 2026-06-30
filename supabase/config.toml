@@ -365,6 +365,20 @@ authorization_url_path = "/oauth/consent"
 # Allow dynamic client registration
 allow_dynamic_registration = false
 
+# The ingest_feeds function is invoked by pg_cron and by the teacher UI. It does
+# NOT use the gateway JWT — it implements its own auth (service-role bearer, the
+# x-internal-cron shared secret used by the cron, and teacher-JWT validation in
+# the body). verify_jwt MUST stay false or the gateway 401s the cron before the
+# function's own auth runs. See supabase/functions/ingest_feeds/index.ts.
+[functions.ingest_feeds]
+verify_jwt = false
+
+# grade_prompt (Prompt Quest AI judge) requires a valid learner JWT — the
+# gateway enforces it and the function additionally checks the caller owns the
+# attempt before grading. verify_jwt stays true (the default, kept explicit).
+[functions.grade_prompt]
+verify_jwt = true
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

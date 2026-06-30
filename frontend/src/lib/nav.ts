@@ -29,6 +29,7 @@ export const teacherMasterclassNav: NavItem[] = [
   { icon: 'groups', label: 'Cohorts', to: '/teacher/masterclass/cohorts' },
   { icon: 'event', label: 'Sessions', to: '/teacher/masterclass/sessions' },
   { icon: 'quiz', label: 'Quizzes', to: '/teacher/masterclass/quizzes' },
+  { icon: 'sports_esports', label: 'Prompt Quest', to: '/teacher/masterclass/arena' },
   { icon: 'assignment', label: 'Homework', to: '/teacher/masterclass/homework' },
   { icon: 'leaderboard', label: 'Leaderboard', to: '/teacher/masterclass/leaderboard' },
   { icon: 'groups', label: 'Group Room', to: '/teacher/masterclass/room' },
@@ -62,6 +63,7 @@ export const masterclassNav: NavItem[] = [
   { icon: 'dashboard', label: 'Home', to: '/masterclass' },
   { icon: 'event', label: 'Sessions', to: '/masterclass/sessions' },
   { icon: 'quiz', label: 'Quizzes', to: '/masterclass/quizzes' },
+  { icon: 'sports_esports', label: 'Prompt Quest', to: '/masterclass/arena' },
   { icon: 'leaderboard', label: 'Leaderboard', to: '/masterclass/leaderboard' },
   { icon: 'assignment', label: 'Homework', to: '/masterclass/homework' },
   { icon: 'trending_up', label: 'Progress', to: '/masterclass/progress' },
@@ -71,8 +73,9 @@ export const masterclassNav: NavItem[] = [
   { icon: 'settings', label: 'Settings', to: '/masterclass/settings' },
 ];
 // Note: the mobile bottom tab bar caps at the first 4 (PRD §8.5 — the core
-// learning loop): Home, Sessions, Quizzes, Leaderboard. Progress + Feed +
-// Settings live in the desktop sidebar and the Home hub.
+// learning loop): Home, Sessions, Quizzes, Prompt Quest. Leaderboard + Progress
+// + Feed + Settings live in the desktop sidebar, the Home hub, and the Quest
+// screens (which link straight to the leaderboard).
 
 export type Role = 'teacher' | 'student' | 'student_group' | null;
 

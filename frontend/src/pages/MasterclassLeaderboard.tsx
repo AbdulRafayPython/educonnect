@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import DashboardLayout from '../components/DashboardLayout';
+import CohortChip from '../components/CohortChip';
 import { masterclassNav, teacherMasterclassNav } from '../lib/nav';
 import { useAppStore } from '../store/useAppStore';
 import { cohortMeta, fetchLeaderboard, tierOf, type AgeGroup, type LeaderboardRow } from '../lib/masterclass';
@@ -26,10 +27,16 @@ function Avatar({ row, size = 40 }: { row: LeaderboardRow; size?: number }) {
   );
 }
 
-function CohortBadge({ ageGroup }: { ageGroup: AgeGroup | null }) {
-  if (!ageGroup) return <span className="text-xs text-on-surface-variant">—</span>;
-  const m = cohortMeta[ageGroup];
-  return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ${m.badge}`}>{m.label}</span>;
+// Podium avatar with responsive sizing via classes (so it shrinks on phones and
+// the three columns never overflow the card). `big` = the 1st-place medallion.
+function PodiumAvatar({ row, big }: { row: LeaderboardRow; big?: boolean }) {
+  const initials = (row.display_name || '?').split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+  const cls = big ? 'w-14 h-14 sm:w-[4.5rem] sm:h-[4.5rem] text-xl' : 'w-11 h-11 sm:w-14 sm:h-14 text-base';
+  return row.avatar_url ? (
+    <img src={row.avatar_url} alt="" className={`rounded-full object-cover ${cls}`} />
+  ) : (
+    <div className={`rounded-full academic-gradient flex items-center justify-center text-white font-bold ${cls}`}>{initials}</div>
+  );
 }
 
 function TierBadge({ points }: { points: number }) {
@@ -48,22 +55,22 @@ function Podium({ rows }: { rows: LeaderboardRow[] }) {
     { row: third, place: 3, h: 'h-16', medal: '#D97706', delay: 0.1 },
   ].filter((s) => s.row);
   return (
-    <div className="academic-gradient rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+    <div className="academic-gradient rounded-3xl px-4 pt-11 pb-4 sm:px-8 sm:pt-14 sm:pb-8 relative overflow-hidden">
       <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 30% 20%, white 0, transparent 45%), radial-gradient(circle at 80% 60%, white 0, transparent 40%)' }} />
-      <div className="relative flex items-end justify-center gap-3 sm:gap-6">
+      <div className="relative flex items-end justify-center gap-1.5 sm:gap-6">
         {slots.map(({ row, place, h, medal, delay }) => (
           <motion.div key={row!.user_id} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay, type: 'spring', stiffness: 120, damping: 16 }}
-            className="flex flex-col items-center w-24 sm:w-32">
+            className="flex flex-col items-center flex-1 min-w-0 max-w-32">
             <div className="relative">
-              {place === 1 && <span className="material-symbols-outlined absolute -top-6 left-1/2 -translate-x-1/2 text-amber-300" style={{ fontSize: '1.6rem', fontVariationSettings: "'FILL' 1" }}>emoji_events</span>}
+              {place === 1 && <span className="material-symbols-outlined absolute -top-9 sm:-top-10 left-1/2 -translate-x-1/2 text-amber-300" style={{ fontSize: '2.4rem', fontVariationSettings: "'FILL' 1", filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))' }}>emoji_events</span>}
               <div className="rounded-full p-[3px]" style={{ background: medal }}>
-                <Avatar row={row!} size={place === 1 ? 72 : 56} />
+                <PodiumAvatar row={row!} big={place === 1} />
               </div>
-              <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center ring-2 ring-white/90" style={{ background: medal }}>{place}</span>
+              <span className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full text-white text-[0.65rem] sm:text-xs font-bold flex items-center justify-center ring-2 ring-white/90" style={{ background: medal }}>{place}</span>
             </div>
-            <p className="mt-3 text-white font-bold text-sm truncate max-w-full">{row!.display_name}</p>
-            <CohortBadge ageGroup={row!.age_group} />
+            <p className="mt-2.5 w-full text-center text-white font-bold text-xs sm:text-sm truncate">{row!.display_name}</p>
+            <CohortChip ageGroup={row!.age_group} size="sm" className="mt-1 max-w-full" />
             <p className="text-white/90 font-extrabold text-sm sm:text-base mt-1">{fmtXp(row!.total_points)}</p>
             <div className={`mt-2 w-full ${h} rounded-t-xl bg-white/15 backdrop-blur-sm flex items-start justify-center pt-2`}>
               <span className="text-white/70 font-black text-lg">{place}</span>
@@ -88,7 +95,7 @@ function MyRankCard({ row, total }: { row: LeaderboardRow; total: number }) {
         <Avatar row={row} size={48} />
         <div className="min-w-0">
           <p className="font-bold text-on-surface truncate">{row.display_name}</p>
-          <CohortBadge ageGroup={row.age_group} />
+          <CohortChip ageGroup={row.age_group} className="mt-0.5" />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3 mt-4">
@@ -122,8 +129,8 @@ export default function MasterclassLeaderboard() {
     (async () => {
       try {
         setRows(await fetchLeaderboard());
-      } catch (e: any) {
-        setError(e?.message ?? 'Could not load the leaderboard.');
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Could not load the leaderboard.');
       } finally {
         setLoading(false);
       }
@@ -182,52 +189,39 @@ export default function MasterclassLeaderboard() {
             <div className="lg:col-span-2 space-y-6">
               {podium.length > 0 && <Podium rows={podium} />}
 
-              {/* Ranked list */}
-              <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-left text-[0.6rem] font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container/40">
-                        <th className="px-4 py-2.5 w-12">Rank</th>
-                        <th className="px-3 py-2.5">Student</th>
-                        <th className="px-3 py-2.5 hidden sm:table-cell">Cohort</th>
-                        <th className="px-3 py-2.5 hidden md:table-cell">Quiz progress</th>
-                        <th className="px-3 py-2.5 text-right">Points</th>
-                        <th className="px-3 py-2.5 text-right hidden sm:table-cell">Tier</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rest.map((r, i) => {
-                        const isMe = r.user_id === user?.id;
-                        return (
-                          <motion.tr key={r.user_id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: Math.min(i * 0.02, 0.3) }}
-                            className={`border-t border-outline-variant/10 ${isMe ? 'bg-primary/5' : ''}`}>
-                            <td className="px-4 py-3 font-extrabold text-on-surface-variant tabular-nums">{r.rank}</td>
-                            <td className="px-3 py-3">
-                              <div className="flex items-center gap-2.5">
-                                <Avatar row={r} size={34} />
-                                <span className="whitespace-nowrap px-3.5 py-1.5 rounded-full text-sm font-bold transition-all academic-gradient text-white shadow-sm">{r.display_name}</span>
-                                {isMe && <span className="text-[0.6rem] font-bold uppercase tracking-widest text-primary">You</span>}
-                              </div>
-                            </td>
-                            <td className="px-3 py-3 hidden sm:table-cell"><CohortBadge ageGroup={r.age_group} /></td>
-                            <td className="px-3 py-3 hidden md:table-cell">
-                              <div className="flex items-center gap-2">
-                                <div className="h-1.5 w-24 rounded-full bg-surface-container overflow-hidden">
-                                  <div className="h-full academic-gradient rounded-full" style={{ width: `${r.completion_percent}%` }} />
-                                </div>
-                                <span className="text-xs font-bold text-on-surface-variant tabular-nums">{r.completion_percent}%</span>
-                              </div>
-                            </td>
-                            <td className="px-3 py-3 text-right font-extrabold text-on-surface tabular-nums whitespace-nowrap">{fmtXp(r.total_points)}</td>
-                            <td className="px-3 py-3 text-right hidden sm:table-cell"><TierBadge points={r.total_points} /></td>
-                          </motion.tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+              {/* Ranked list — a flex row list (not a table) so it always fits
+                  its column with no horizontal scroll; long names truncate. */}
+              <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 overflow-hidden divide-y divide-outline-variant/10">
+                {rest.map((r, i) => {
+                  const isMe = r.user_id === user?.id;
+                  return (
+                    <motion.div key={r.user_id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: Math.min(i * 0.02, 0.3) }}
+                      className={`flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 ${isMe ? 'bg-primary/5' : ''}`}>
+                      <span className="w-6 shrink-0 text-center font-extrabold text-on-surface-variant tabular-nums">{i + 4}</span>
+                      <Avatar row={r} size={36} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="min-w-0 truncate academic-gradient text-white font-bold text-sm rounded-full px-3 py-1 shadow-sm">{r.display_name}</span>
+                          {isMe && <span className="shrink-0 text-[0.55rem] font-bold uppercase tracking-widest text-primary">You</span>}
+                        </div>
+                        <div className="mt-1.5 flex items-center gap-2 min-w-0">
+                          <CohortChip ageGroup={r.age_group} size="sm" className="max-w-[60%] sm:max-w-none" />
+                          <div className="hidden sm:flex items-center gap-1.5">
+                            <div className="h-1.5 w-20 rounded-full bg-surface-container overflow-hidden">
+                              <div className="h-full academic-gradient rounded-full" style={{ width: `${r.completion_percent}%` }} />
+                            </div>
+                            <span className="text-[0.65rem] font-bold text-on-surface-variant tabular-nums">{r.completion_percent}%</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="shrink-0 text-right pl-1">
+                        <p className="font-extrabold text-on-surface tabular-nums text-sm whitespace-nowrap">{fmtXp(r.total_points)}</p>
+                        <div className="mt-1 hidden sm:flex justify-end"><TierBadge points={r.total_points} /></div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
 

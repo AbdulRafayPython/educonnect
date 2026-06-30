@@ -6,8 +6,8 @@
 // Invoked hourly by pg_cron via net.http_post, or manually from the teacher dashboard.
 
 /// <reference path="./deno.d.ts" />
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { XMLParser } from "fast-xml-parser";
+import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { XMLParser } from "npm:fast-xml-parser@4";
 import { corsHeaders, handleCorsPreflight, jsonResponse } from "../_shared/cors.ts";
 
 // ---------- Constants ----------
@@ -15,13 +15,23 @@ import { corsHeaders, handleCorsPreflight, jsonResponse } from "../_shared/cors.
 const LOG = "[ingest_feeds]";
 const RSS_TIMEOUT_MS = 8_000;
 const ARTICLE_TIMEOUT_MS = 3_000; // kept for future use; article scraping is currently skipped
-const IMAGE_TIMEOUT_MS = 5_000;
-const GEMINI_TIMEOUT_MS = 6_000;
+const IMAGE_TIMEOUT_MS = 4_000;
+const GEMINI_TIMEOUT_MS = 9_000; // per-model attempt; the loop may try a 2nd model on a 503
 const MAX_IMAGE_BYTES = 800_000;
-const MAX_SOURCES_PER_RUN = 3;    // keep wall-clock time under 150 s
-const MAX_ITEMS_PER_SOURCE = 2;   // 3 sources × 2 items = 6 LLM calls worst-case
+const MAX_SOURCES_PER_RUN = 4;    // 4 sources × 1 newest item, rotated by last_fetched_at, keeps each run well under 150 s
+const MAX_ITEMS_PER_SOURCE = 1;   // the single newest unseen item per source — that IS "the latest" and keeps Gemini time bounded
 const MAX_ITEMS_PER_RUN = 10;
 const MAX_LLM_CALLS_PER_RUN = 10;
+// Hard wall-clock budget for the whole run. The hosted runtime kills the
+// isolate at ~150 s (status 546 / WORKER_RESOURCE_LIMIT) before finalizeRun
+// can persist results, so we stop well short of that and always finalize.
+const RUN_DEADLINE_MS = 125_000;
+// Per-source hard cap. Supabase-js DB/storage calls have no native timeout, so
+// a single stuck call could otherwise hang the isolate until the 150 s kill.
+// Wrapping each source in this guarantees the loop keeps moving and finalizes.
+const PER_SOURCE_MS = 30_000;
+// Bound the small pre-loop bookkeeping queries too.
+const QUERY_MS = 8_000;
 // A run open longer than this is considered crashed/timed-out and will be
 // purged at the start of the next invocation so the guard index is freed.
 const STALE_RUN_MINUTES = 4;
@@ -31,6 +41,11 @@ const COVERS_PREFIX = "feed-covers";
 
 const SIMPLIFIER_SYSTEM_PROMPT =
   "You rewrite AI/tech news for a high-school student. Plain language, no jargon, no hype. Output only JSON.";
+
+// Tried in order. The plain `gemini-2.5-flash` alias frequently returns 503
+// "experiencing high demand"; -lite and 2.0-flash are far more available and
+// more than capable of this lightweight rewrite. First model that answers wins.
+const GEMINI_MODELS = ["gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-2.5-flash"];
 
 // ---------- Types ----------
 
@@ -167,6 +182,7 @@ async function runIngest(
   geminiApiKey: string,
 ): Promise<IngestSummary> {
   console.log(`${LOG} run starting`);
+  const runStart = Date.now();
 
   // Close any run row that has been open longer than STALE_RUN_MINUTES.
   // This happens when a previous execution was killed by the 150 s wall-clock
@@ -213,20 +229,30 @@ async function runIngest(
   let sourcesSeen = 0;
 
   // Fetch the student profile once — single-student model, used for notifications.
-  const { data: studentRow } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("role", "student")
-    .limit(1)
-    .maybeSingle();
+  const { data: studentRow } = await withTimeout(
+    (async () =>
+      await supabase
+        .from("profiles")
+        .select("id")
+        .eq("role", "student")
+        .limit(1)
+        .maybeSingle())(),
+    QUERY_MS,
+    "student fetch",
+  ).catch(() => ({ data: null }));
   const studentId: string | null = studentRow?.id ?? null;
 
-  const { data: sources, error: sourcesErr } = await supabase
-    .from("feed_sources")
-    .select("id, name, rss_url, is_active, consecutive_failures")
-    .eq("is_active", true)
-    .order("last_fetched_at", { ascending: true, nullsFirst: true })
-    .limit(MAX_SOURCES_PER_RUN);
+  const { data: sources, error: sourcesErr } = await withTimeout(
+    (async () =>
+      await supabase
+        .from("feed_sources")
+        .select("id, name, rss_url, is_active, consecutive_failures")
+        .eq("is_active", true)
+        .order("last_fetched_at", { ascending: true, nullsFirst: true })
+        .limit(MAX_SOURCES_PER_RUN))(),
+    QUERY_MS,
+    "sources fetch",
+  ).catch((e) => ({ data: null, error: { message: String(e) } }));
 
   if (sourcesErr) {
     console.log(`${LOG} feed_sources select failed:`, sourcesErr.message);
@@ -247,6 +273,10 @@ async function runIngest(
         console.log(`${LOG} run cap reached, stopping`);
         break;
       }
+      if (Date.now() - runStart > RUN_DEADLINE_MS) {
+        console.log(`${LOG} run deadline reached, stopping before [${source.name}]`);
+        break;
+      }
       sourcesSeen++;
 
       try {
@@ -256,15 +286,23 @@ async function runIngest(
 
         if (sourceCap <= 0) break;
 
-        const result = await processSource(
-          supabase,
-          source,
-          sourceCap,
-          geminiApiKey,
-          studentId,
+        const result = await withTimeout(
+          processSource(
+            supabase,
+            source,
+            sourceCap,
+            geminiApiKey,
+            studentId,
+            runStart + RUN_DEADLINE_MS,
+          ),
+          PER_SOURCE_MS,
+          `source ${source.name}`,
         );
         itemsInserted += result.itemsInserted;
         llmCalls += result.llmCalls;
+        if (result.geminiError) {
+          errors.push({ source_id: source.id, source_name: source.name, message: `gemini: ${result.geminiError}` });
+        }
 
         await supabase
           .from("feed_sources")
@@ -304,16 +342,21 @@ async function finalizeRun(
   llmCalls: number,
   errors: RunError[],
 ): Promise<void> {
-  await supabase
-    .from("feed_ingest_runs")
-    .update({
-      finished_at: new Date().toISOString(),
-      sources_seen: sourcesSeen,
-      items_inserted: itemsInserted,
-      llm_calls: llmCalls,
-      errors: errors.length > 0 ? errors : null,
-    })
-    .eq("id", runId);
+  await withTimeout(
+    (async () =>
+      await supabase
+        .from("feed_ingest_runs")
+        .update({
+          finished_at: new Date().toISOString(),
+          sources_seen: sourcesSeen,
+          items_inserted: itemsInserted,
+          llm_calls: llmCalls,
+          errors: errors.length > 0 ? errors : null,
+        })
+        .eq("id", runId))(),
+    QUERY_MS,
+    "finalizeRun",
+  ).catch((e) => console.log(`${LOG} finalizeRun warning:`, e instanceof Error ? e.message : e));
 }
 
 // ---------- Per-source processing ----------
@@ -321,6 +364,7 @@ async function finalizeRun(
 interface SourceResult {
   itemsInserted: number;
   llmCalls: number;
+  geminiError?: string;
 }
 
 async function processSource(
@@ -329,12 +373,13 @@ async function processSource(
   cap: number,
   geminiApiKey: string,
   studentId: string | null,
+  deadline: number,
 ): Promise<SourceResult> {
   console.log(`${LOG} processing source [${source.name}] cap=${cap}`);
 
-  const xml = await fetchWithTimeout(source.rss_url, {
+  const xml = await fetchTextWithTimeout(source.rss_url, {
     headers: { "User-Agent": USER_AGENT, Accept: "application/rss+xml, application/xml, text/xml, */*" },
-  }, RSS_TIMEOUT_MS).then((r) => r.text());
+  }, RSS_TIMEOUT_MS);
 
   const entries = parseFeed(xml);
   if (entries.length === 0) {
@@ -343,25 +388,41 @@ async function processSource(
   }
 
   // Batch dedup — single query against feed_items for all candidate URLs.
-  const candidateUrls = entries.map((e) => e.link).filter(Boolean);
+  // Consider only the newest window for BOTH dedup and freshness. `fresh` must
+  // be drawn from exactly the set we deduped — otherwise it can pick an entry
+  // past the dedup window, waste a Gemini call, then fail the UNIQUE insert.
+  // A small window also keeps the `.in()` fast (deduping every URL of a big
+  // feed was timing out on the edge runtime).
+  const recent = entries.slice(0, Math.max(cap * 4, 12));
+  const candidateUrls = recent.map((e) => e.link).filter(Boolean);
   const existing = new Set<string>();
   if (candidateUrls.length > 0) {
-    const { data: existingRows } = await supabase
-      .from("feed_items")
-      .select("source_url")
-      .in("source_url", candidateUrls);
+    const { data: existingRows } = await withTimeout(
+      (async () =>
+        await supabase
+          .from("feed_items")
+          .select("source_url")
+          .in("source_url", candidateUrls))(),
+      QUERY_MS,
+      "dedup query",
+    );
     for (const r of existingRows ?? []) {
       if (r.source_url) existing.add(r.source_url as string);
     }
   }
 
-  const fresh = entries.filter((e) => e.link && !existing.has(e.link)).slice(0, cap);
+  const fresh = recent.filter((e) => e.link && !existing.has(e.link)).slice(0, cap);
   console.log(`${LOG} [${source.name}] ${entries.length} parsed, ${fresh.length} new`);
 
   let inserted = 0;
   let llmCalls = 0;
+  let geminiError: string | undefined;
 
   for (const entry of fresh) {
+    if (Date.now() > deadline) {
+      console.log(`${LOG} [${source.name}] deadline reached mid-source, stopping`);
+      break;
+    }
     try {
       const cleanExcerpt = stripHtml(entry.description).slice(0, 2000);
 
@@ -389,7 +450,9 @@ async function processSource(
           simplified = await simplifyWithGemini(entry.title, cleanExcerpt, geminiApiKey);
           usedLLM = true;
         } catch (err) {
-          console.log(`${LOG} gemini failed, using fallback:`, err instanceof Error ? err.message : err);
+          const m = err instanceof Error ? err.message : String(err);
+          console.log(`${LOG} gemini failed, using fallback:`, m);
+          geminiError = m;
           simplified = fallbackSimplify(entry.title, cleanExcerpt);
         }
       } else {
@@ -399,20 +462,25 @@ async function processSource(
 
       const publishedAt = pickPublishedAt(entry.pubDate);
 
-      const { error: insertErr } = await supabase.from("feed_items").insert({
-        id: newItemId,
-        type: "news",
-        status: "published",
-        title: simplified.title_simple,
-        summary: simplified.summary_simple,
-        cover_image_url: coverImageUrl,
-        cover_image_url_original: originalImage,
-        source_id: source.id,
-        source_name: source.name,
-        source_url: entry.link,
-        published_at: publishedAt,
-        created_by: null,
-      });
+      const { error: insertErr } = await withTimeout(
+        (async () =>
+          await supabase.from("feed_items").insert({
+            id: newItemId,
+            type: "news",
+            status: "published",
+            title: simplified.title_simple,
+            summary: simplified.summary_simple,
+            cover_image_url: coverImageUrl,
+            cover_image_url_original: originalImage,
+            source_id: source.id,
+            source_name: source.name,
+            source_url: entry.link,
+            published_at: publishedAt,
+            created_by: null,
+          }))(),
+        QUERY_MS,
+        "item insert",
+      );
 
       if (insertErr) {
         // Most likely a UNIQUE(source_url) race; treat as benign.
@@ -423,13 +491,20 @@ async function processSource(
       inserted++;
 
       if (studentId) {
-        await supabase.from("notifications").insert({
-          recipient_id: studentId,
-          type: "feed_item_published",
-          title: "New in your feed",
-          body: simplified.title_simple,
-          related_id: newItemId,
-        });
+        // Best-effort, bounded — a slow notification insert must not eat the
+        // per-source budget. Don't block the next item on it.
+        await withTimeout(
+          (async () =>
+            await supabase.from("notifications").insert({
+              recipient_id: studentId,
+              type: "feed_item_published",
+              title: "New in your feed",
+              body: simplified.title_simple,
+              related_id: newItemId,
+            }))(),
+          QUERY_MS,
+          "notification insert",
+        ).catch((e) => console.log(`${LOG} notify warning:`, e instanceof Error ? e.message : e));
       }
     } catch (err) {
       // Per-entry failure must not stop the rest of this source.
@@ -437,7 +512,7 @@ async function processSource(
     }
   }
 
-  return { itemsInserted: inserted, llmCalls };
+  return { itemsInserted: inserted, llmCalls, geminiError };
 }
 
 // ---------- Feed parsing ----------
@@ -618,35 +693,55 @@ async function proxyImage(
   url: string,
   itemId: string,
 ): Promise<string | null> {
-  const res = await fetchWithTimeout(url, {
-    headers: { "User-Agent": USER_AGENT, Accept: "image/*" },
-  }, IMAGE_TIMEOUT_MS);
-  if (!res.ok) return null;
+  // Fetch headers + bytes inside one AbortController scope so a slow image
+  // server can't hang the body read after the fetch promise resolves.
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), IMAGE_TIMEOUT_MS);
+  let contentType: string;
+  let ext: string;
+  let buf: ArrayBuffer;
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": USER_AGENT, Accept: "image/*" },
+      signal: ctrl.signal,
+    });
+    if (!res.ok) return null;
 
-  const declaredLen = Number(res.headers.get("content-length") ?? "0");
-  if (declaredLen && declaredLen > MAX_IMAGE_BYTES) {
-    console.log(`${LOG} image too big by header: ${declaredLen}`);
-    return null;
+    const declaredLen = Number(res.headers.get("content-length") ?? "0");
+    if (declaredLen && declaredLen > MAX_IMAGE_BYTES) {
+      console.log(`${LOG} image too big by header: ${declaredLen}`);
+      return null;
+    }
+
+    contentType = (res.headers.get("content-type") ?? "").toLowerCase().split(";")[0].trim();
+    const maybeExt = extFromContentType(contentType, url);
+    if (!maybeExt) return null;
+    ext = maybeExt;
+
+    buf = await res.arrayBuffer();
+  } finally {
+    clearTimeout(timer);
   }
 
-  const contentType = (res.headers.get("content-type") ?? "").toLowerCase().split(";")[0].trim();
-  const ext = extFromContentType(contentType, url);
-  if (!ext) return null;
-
-  const buf = await res.arrayBuffer();
   if (buf.byteLength > MAX_IMAGE_BYTES) {
     console.log(`${LOG} image too big after read: ${buf.byteLength}`);
     return null;
   }
 
   const path = `${COVERS_PREFIX}/${itemId}.${ext}`;
-  const { error: uploadErr } = await supabase.storage
-    .from(BRANDING_BUCKET)
-    .upload(path, new Uint8Array(buf), {
-      contentType: contentType || `image/${ext}`,
-      cacheControl: "31536000",
-      upsert: true,
-    });
+  // The storage upload has no native timeout — bound it so a stuck upload
+  // can't burn the whole run's wall-clock budget.
+  const { error: uploadErr } = await withTimeout(
+    supabase.storage
+      .from(BRANDING_BUCKET)
+      .upload(path, new Uint8Array(buf), {
+        contentType: contentType || `image/${ext}`,
+        cacheControl: "31536000",
+        upsert: true,
+      }),
+    IMAGE_TIMEOUT_MS,
+    "image upload",
+  );
   if (uploadErr) {
     console.log(`${LOG} upload error:`, uploadErr.message);
     return null;
@@ -674,8 +769,34 @@ async function simplifyWithGemini(
   excerpt: string,
   apiKey: string,
 ): Promise<SimplifierResult> {
+  let lastErr: Error | null = null;
+  for (const model of GEMINI_MODELS) {
+    try {
+      return await callGeminiModel(model, title, excerpt, apiKey);
+    } catch (err) {
+      lastErr = err instanceof Error ? err : new Error(String(err));
+      // Only fall through to the next model on transient/availability errors
+      // (overload, rate-limit, server, timeout). A genuine 4xx (bad key /
+      // request) won't be fixed by another model — stop and surface it.
+      if (!isRetryableGeminiError(lastErr.message)) break;
+      console.log(`${LOG} gemini model ${model} unavailable, trying next:`, lastErr.message.slice(0, 120));
+    }
+  }
+  throw lastErr ?? new Error("gemini: no models attempted");
+}
+
+function isRetryableGeminiError(msg: string): boolean {
+  return /http (429|5\d\d)/.test(msg) || /aborted|timed out|UNAVAILABLE|overloaded/i.test(msg);
+}
+
+async function callGeminiModel(
+  model: string,
+  title: string,
+  excerpt: string,
+  apiKey: string,
+): Promise<SimplifierResult> {
   const url =
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const body = {
     systemInstruction: { parts: [{ text: SIMPLIFIER_SYSTEM_PROMPT }] },
     contents: [
@@ -696,20 +817,26 @@ async function simplifyWithGemini(
     },
   };
 
-  const res = await fetchWithTimeout(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  }, GEMINI_TIMEOUT_MS);
-
-  if (!res.ok) {
-    const t = await res.text().catch(() => "");
-    throw new Error(`gemini http ${res.status}: ${t.slice(0, 200)}`);
-  }
-
-  const data = await res.json() as {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), GEMINI_TIMEOUT_MS);
+  let data: {
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
   };
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) {
+      const t = await res.text().catch(() => "");
+      throw new Error(`gemini http ${res.status}: ${t.slice(0, 160)}`);
+    }
+    data = await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 
   let parsed: Partial<SimplifierResult>;
@@ -763,4 +890,44 @@ async function fetchWithTimeout(
   } finally {
     clearTimeout(timer);
   }
+}
+
+// Fetch *and* read the response body within a single AbortController scope.
+// Plain fetchWithTimeout clears its timer the moment the Response resolves, so
+// a subsequent `.text()` on a slow-streaming body is unbounded — the exact hang
+// that let runs reach the 150 s WORKER_RESOURCE_LIMIT kill. Reading the body
+// here keeps the abort signal live through the whole transfer.
+async function fetchTextWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number,
+): Promise<string> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...init, signal: ctrl.signal });
+    if (!res.ok) throw new Error(`http ${res.status}`);
+    return await res.text();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Bound a non-fetch promise (e.g. a Supabase storage upload / DB call, which
+// have no native AbortSignal) so a stuck call can't burn the run's budget.
+// The underlying work isn't cancelled, but we stop awaiting it and move on.
+function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    p.then(
+      (v) => {
+        clearTimeout(t);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(t);
+        reject(e);
+      },
+    );
+  });
 }
